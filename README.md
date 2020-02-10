@@ -1,10 +1,11 @@
 # PyTorch-Seq2seq
+Implementation Seq2seq using PyTorch  
 ![model](https://postfiles.pstatic.net/MjAyMDAxMjVfOTcg/MDAxNTc5ODg2Mzg1MDY0.6AZl4lQOMMyebjJWS03Qu1QefqNMVnN6-VZ2DwAZsRwg.nOPSIURc7whBqokISdvzU7e2TABbpkLv0uPcDszIxN4g.GIF.sooftware/Sooftware.gif?type=w773)
 * Seq2seq with Attention
 
 ## Reference
-[[1]   IBM pytorch-seq2seq](https://github.com/IBM/pytorch-seq2seq)
-[[2]   PyTorch VGG Net](https://github.com/chengyangfu/pytorch-vgg-cifar10/blob/master/vgg.py)  
+[[1]   IBM pytorch-seq2seq](https://github.com/IBM/pytorch-seq2seq)   
+[[2]   PyTorch VGG Net](https://github.com/chengyangfu/pytorch-vgg-cifar10/blob/master/vgg.py)    
 [[3] 「Listen, Attend and Spell」  Paper](https://arxiv.org/abs/1508.01211)   
 
 ## License
