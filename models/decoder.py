@@ -17,7 +17,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from models.beam import Beam
-from .concat_attention import ConcatAttention
+from .attention import ConcatAttention
 
 if torch.cuda.is_available():
     import torch.cuda as device
