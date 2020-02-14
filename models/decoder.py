@@ -17,7 +17,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from models.beam import Beam
-from .attention import ConcatAttention
+from .attention import ConcatAttention, Attention
 
 if torch.cuda.is_available():
     import torch.cuda as device
@@ -48,9 +48,9 @@ class Decoder(nn.Module):
         self.use_beam_search = use_beam_search
         self.k = k
         if use_attention:
-            self.attention = ConcatAttention(self.hidden_size)
+            self.attention = Attention(score_function='hybrid', decoder_hidden_size=hidden_size)
 
-    def _forward_step(self, decoder_input, decoder_hidden, encoder_outputs, function):
+    def _forward_step(self, decoder_input, decoder_hidden, encoder_outputs, last_alignment, function):
         batch_size = decoder_input.size(0)
         output_size = decoder_input.size(1)
         embedded = self.embedding(decoder_input)
@@ -59,14 +59,15 @@ class Decoder(nn.Module):
             self.rnn.flatten_parameters()
         decoder_output, hidden = self.rnn(embedded, decoder_hidden) # decoder output
 
+        alignment = None
         if self.use_attention:
-            output = self.attention(decoder_output=decoder_output, encoder_output=encoder_outputs)
-        else: output = decoder_output
-        # torch.view()에서 -1이면 나머지 알아서 맞춰줌
-        predicted_softmax = function(self.out(output.contiguous().view(-1, self.hidden_size)), dim=1).view(batch_size, output_size, -1)
-        return predicted_softmax
+            context, alignment = self.attention(decoder_output, encoder_outputs, last_alignment)
+        else:
+            context = decoder_output
+        predicted_softmax = function(self.out(context.contiguous().view(-1, self.hidden_size)), dim=1).view(batch_size, output_size, -1)                                                                                              -1)
+        return predicted_softmax, alignment
 
-    def forward(self, inputs=None, encoder_hidden=None, encoder_outputs=None, function=F.log_softmax, teacher_forcing_ratio=0.99):
+    def forward(self, inputs=None, encoder_hidden=None, encoder_outputs=None, function=F.log_softmax, teacher_forcing_ratio=0.99, use_beam_search=False):
         y_hats, logit = None, None
         decode_results = []
         # Validate Arguments
@@ -77,8 +78,8 @@ class Decoder(nn.Module):
         # Decide Use Teacher Forcing or Not
         use_teacher_forcing = True if random.random() < teacher_forcing_ratio else False
 
-        if self.use_beam_search:
-            """ decode with Beam-Search during test """
+        if use_beam_search:
+            """Implementation of Beam-Search Decoding"""
             decoder_input = inputs[:, 0].unsqueeze(1)
             beam = Beam(k=self.k, decoder_hidden=decoder_hidden, decoder=self,
                         batch_size=batch_size, max_len=max_length, decode_func=function)
@@ -86,16 +87,26 @@ class Decoder(nn.Module):
         else:
             if use_teacher_forcing:
                 decoder_input = inputs[:, :-1]  # except </s>
-                """ if teacher_forcing, Infer all at once """
-                predicted_softmax = self._forward_step(decoder_input, decoder_hidden, encoder_outputs, function=function)
-                """Extract Output by Step"""
-                for di in range(predicted_softmax.size(1)):
-                    step_output = predicted_softmax[:, di, :]
+                last_alignment = None
+                """ Fix to non-parallel process even in teacher forcing to apply location-aware attention """
+                for di in range(len(decoder_input[0])):
+                    predicted_softmax, last_alignment = self._forward_step(
+                        decoder_input=decoder_input[:, di].unsqueeze(1),
+                        decoder_hidden=decoder_hidden,
+                        encoder_outputs=encoder_outputs,
+                        last_alignment=last_alignment,
+                        function=function)
+                    step_output = predicted_softmax.squeeze(1)
                     decode_results.append(step_output)
             else:
                 decoder_input = inputs[:, 0].unsqueeze(1)
+                last_alignment = None
                 for di in range(max_length):
-                    predicted_softmax = self._forward_step(decoder_input, decoder_hidden, encoder_outputs, function=function)
+                    predicted_softmax, last_alignment = self._forward_step(decoder_input=decoder_input,
+                                                                           decoder_hidden=decoder_hidden,
+                                                                           encoder_outputs=encoder_outputs,
+                                                                           last_alignment=last_alignment,
+                                                                           function=function)
                     step_output = predicted_softmax.squeeze(1)
                     decode_results.append(step_output)
                     decoder_input = decode_results[-1].topk(1)[1]
