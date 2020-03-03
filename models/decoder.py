@@ -17,7 +17,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from models.beam import Beam
-from .attention import ConcatAttention, Attention
+from .attention import SelfAttention
 
 if torch.cuda.is_available():
     import torch.cuda as device
@@ -48,7 +48,7 @@ class Decoder(nn.Module):
         self.use_beam_search = use_beam_search
         self.k = k
         if use_attention:
-            self.attention = Attention(score_function='hybrid', decoder_hidden_size=hidden_size)
+            self.attention = SelfAttention(hidden_size)
 
     def _forward_step(self, decoder_input, decoder_hidden, encoder_outputs, last_alignment, function):
         batch_size = decoder_input.size(0)
