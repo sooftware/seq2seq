@@ -1,45 +1,56 @@
-"""
-Copyright 2020- Sooftware
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-      http://www.apache.org/licenses/LICENSE-2.0
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
-
 import torch.nn as nn
 import torch.nn.functional as F
 
 class Seq2seq(nn.Module):
-    """ Seq2seq with Attention """
-    def __init__(self, encoder, decoder, decode_function = F.log_softmax, use_pyramidal = False):
+    r"""
+    Sequence to Sequence Model
+
+    Args:
+        encoder (torch.nn.Module): encoder of seq2seq
+        decoder (torch.nn.Module): decoder of seq2seq
+        function (torch.nn.functional): A function used to generate symbols from RNN hidden state
+
+    Inputs: inputs, targets, teacher_forcing_ratio, use_beam_search
+        - **inputs** (torch.Tensor): tensor of sequences, whose length is the batch size and within which
+          each sequence is a list of token IDs. This information is forwarded to the encoder.
+        - **targets** (torch.Tensor): tensor of sequences, whose length is the batch size and within which
+          each sequence is a list of token IDs. This information is forwarded to the decoder.
+        - **teacher_forcing_ratio** (float): The probability that teacher forcing will be used. A random number
+          is drawn uniformly from 0-1 for every decoding token, and if the sample is smaller than the given value,
+          teacher forcing would be used (default is 0.90)
+        - **use_beam_search** (bool): flag indication whether to use beam-search or not (default: false)
+
+    Returns: y_hats, logits
+        - **y_hats** (batch, seq_len): predicted y values (y_hat) by the model
+        - **logits** (batch, seq_len, vocab_size): logit values by the model
+
+    Examples::
+        >>> encoder = EncoderRNN(input_size, hidden_size, dropout_p=0.5, layer_size=5, bidirectional=True, 'gru')
+        >>> decoder = DecoderRNN(vocab_size, max_len, hidden_size, sos_id, eos_id, 1, 'gru', dropout_p, use_attention, device, use_beam_search, k)
+        >>> model = Seq2seq(encoder, decoder)
+        >>> y_hats, logits = model()
+    """
+    def __init__(self, encoder, decoder, function=F.log_softmax):
         super(Seq2seq, self).__init__()
         self.encoder = encoder
         self.decoder = decoder
-        self.decode_function = decode_function
-        self.use_pyramidal = use_pyramidal
+        self.function = function
+
+    def forward(self, inputs, targets, teacher_forcing_ratio=0.90, use_beam_search=False):
+        encoder_outputs, encoder_hidden = self.encoder(inputs)
+        y_hats, logits = self.decoder(
+            inputs=targets,
+            encoder_outputs=encoder_outputs,
+            function=self.function,
+            teacher_forcing_ratio=teacher_forcing_ratio,
+            use_beam_search=use_beam_search
+        )
+
+        return y_hats, logits
+
+    def set_beam_size(self, k):
+        self.speller.k = k
 
     def flatten_parameters(self):
-        if self.use_pyramidal:
-            self.encoder.bottom_rnn.flatten_parameters()
-            self.encoder.middle_rnn.flatten_parameters()
-            self.encoder.top_rnn.flatten_parameters()
-        else:
-            self.encoder.rnn.flatten_parameters()
+        self.encoder.flatten_parameters()
         self.decoder.rnn.flatten_parameters()
-
-    def beam_search(self, use = True):
-        self.decoder.use_beam_search = use
-
-    def forward(self, feats, targets=None, teacher_forcing_ratio=0.99):
-        encoder_outputs, encoder_hidden = self.encoder(feats)
-        y_hat, logit = self.decoder(inputs = targets,
-                                    encoder_hidden = encoder_hidden,
-                                    encoder_outputs = encoder_outputs,
-                                    function = self.decode_function,
-                                    teacher_forcing_ratio = teacher_forcing_ratio)
-        return y_hat, logit
