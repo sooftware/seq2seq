@@ -1,6 +1,4 @@
 import torch
-import numpy as np
-
 
 class Beam:
     r"""
@@ -11,7 +9,8 @@ class Beam:
         decoder_hidden (torch.Tensor) : hidden state of decoder
         batch_size (int) : mini-batch size during infer
         max_len (int) :  a maximum allowed length for the sequence to be processed
-        function (torch.nn.Module) : A function used to generate symbols from RNN hidden state (default : torch.nn.functional.log_softmax)
+        function (torch.nn.Module) : A function used to generate symbols from RNN hidden state
+        (default : torch.nn.functional.log_softmax)
         decoder (torch.nn.Module) : get pointer of decoder object to get multiple parameters at once
         beams (torch.Tensor) : ongoing beams for decoding
         probs (torch.Tensor) : cumulative probability of beams (score of beams)
@@ -26,6 +25,7 @@ class Beam:
         - **y_hats** (batch, seq_len): predicted y values (y_hat) by the model
 
     Examples::
+
         >>> beam = Beam(k, decoder_hidden, decoder, batch_size, max_len, F.log_softmax)
         >>> y_hats = beam.search(inputs, encoder_outputs)
     """
@@ -43,7 +43,7 @@ class Beam:
         self.use_attention = decoder.use_attention
         self.attention = decoder.attention
         self.hidden_size = decoder.hidden_size
-        self.out = decoder.out
+        self.w = decoder.w
         self.eos_id = decoder.eos_id
         self.beams = None
         self.probs = None
@@ -54,7 +54,9 @@ class Beam:
     def search(self, decoder_input, encoder_outputs):
         """
         Beam-Search Decoding (Top-K Decoding)
+
         Examples::
+
             >>> beam = Beam(k, decoder_hidden, decoder, batch_size, max_len, F.log_softmax)
             >>> y_hats = beam.search(inputs, encoder_outputs)
         """
@@ -80,7 +82,7 @@ class Beam:
             # get top k distribution (shape: BxKxK)
             child_ps, child_vs = step_output.topk(self.k)
             # get child probability (applying length penalty)
-            child_ps = (self.probs.view(self.batch_size, 1, self.k) + child_ps)
+            child_ps = self.probs.view(self.batch_size, 1, self.k) + child_ps
             child_ps /= self._get_length_penalty(length=di+1, alpha=1.2, min_length=5)
             # Transpose (BxKxK) => (BxK^2)
             child_ps = child_ps.view(self.batch_size, self.k * self.k)
@@ -127,8 +129,8 @@ class Beam:
         for batch_num, batch in enumerate(self.sentences):
             if len(batch) == 0:
                 # if there is no terminated sentences, bring ongoing sentence which has the highest probability instead
-                beam_scores = torch.FloatTensor(self.probs[batch_num]).to(self.device)
-                top_beam_idx = int(torch.FloatTensor(beam_scores).topk(1)[1])
+                prob_batch = self.probs[batch_num].to(self.device)
+                top_beam_idx = int(prob_batch.topk(1)[1])
                 y_hats.append(self.beams[batch_num, top_beam_idx])
             else:
                 # bring highest probability sentence
@@ -169,7 +171,7 @@ class Beam:
             output = self.attention(decoder_output, encoder_outputs)
         else:
             output = decoder_output
-        predicted_softmax = self.function(self.out(output.contiguous().view(-1, self.hidden_size)), dim=1)
+        predicted_softmax = self.function(self.w(output.contiguous().view(-1, self.hidden_size)), dim=1)
         predicted_softmax = predicted_softmax.view(self.batch_size,output_size,-1)
         return predicted_softmax
 
