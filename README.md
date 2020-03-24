@@ -5,8 +5,7 @@ Implementation Seq2seq using PyTorch
 
 ## Reference
 [[1]   IBM pytorch-seq2seq](https://github.com/IBM/pytorch-seq2seq)   
-[[2]   PyTorch VGG Net](https://github.com/chengyangfu/pytorch-vgg-cifar10/blob/master/vgg.py)    
-[[3] 「Listen, Attend and Spell」  Paper](https://arxiv.org/abs/1508.01211)   
+[[2]   PyTorch VGG Net](https://github.com/chengyangfu/pytorch-vgg-cifar10/blob/master/vgg.py)     
 
 ## License
 ```
