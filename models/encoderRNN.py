@@ -6,7 +6,7 @@ class EncoderRNN(nn.Module):
     Converts low level features into higher level features
 
     Args:
-        vocab_size (int): size of input
+        in_features (int): size of input
         hidden_size (int): the number of features in the hidden state `h`
         n_layers (int, optional): number of recurrent layers (default: 1)
         bidirectional (bool, optional): if True, becomes a bidirectional encoder (defulat: False)
@@ -22,18 +22,18 @@ class EncoderRNN(nn.Module):
 
     Examples::
 
-        >>> listener = Listener(feat_size, hidden_size, dropout_p=0.5, n_layers=5)
-        >>> output = listener(inputs)
+        >>> listener = Listener(in_features, hidden_size, dropout_p=0.5, n_layers=5)
+        >>> output, hidden = listener(inputs)
     """
-    def __init__(self, vocab_size, hidden_size, dropout_p=0.5, layer_size=5, bidirectional=True, rnn_cell='gru'):
+    def __init__(self, in_features, hidden_size, dropout_p=0.5, n_layers=5, bidirectional=True, rnn_cell='gru'):
         super(EncoderRNN, self).__init__()
         self.rnn_cell = nn.LSTM if rnn_cell.lower() == 'lstm' else nn.GRU if rnn_cell.lower() == 'gru' else nn.RNN
-        self.embedding = nn.Embedding(vocab_size, hidden_size)
+        self.embedding = nn.Embedding(in_features, hidden_size)
         self.input_dropout = nn.Dropout(dropout_p)
         self.rnn = self.rnn_cell(
-            input_size=vocab_size,
+            input_size=hidden_size,
             hidden_size=hidden_size,
-            num_layers=layer_size,
+            num_layers=n_layers,
             bias=True,
             batch_first=True,
             bidirectional=bidirectional,
@@ -45,8 +45,10 @@ class EncoderRNN(nn.Module):
         """ Applies a multi-layer RNN to an input sequence """
         embedded = self.embedding(inputs)
         embedded = self.input_dropout(embedded)
+
         if self.training:
             self.rnn.flatten_parameters()
+
         outputs, hiddens = self.rnn(embedded)
 
         return outputs, hiddens

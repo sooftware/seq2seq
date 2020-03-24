@@ -25,8 +25,8 @@ class Seq2seq(nn.Module):
         - **logits** (batch, seq_len, vocab_size): logit values by the model
 
     Examples::
-        >>> encoder = EncoderRNN(input_size, hidden_size, dropout_p=0.5, layer_size=5, bidirectional=True, 'gru')
-        >>> decoder = DecoderRNN(vocab_size, max_len, hidden_size, sos_id, eos_id, 1, 'gru', dropout_p, use_attention, device, use_beam_search, k)
+        >>> encoder = EncoderRNN(input_size, ...)
+        >>> decoder = DecoderRNN(class_num, ...)
         >>> model = Seq2seq(encoder, decoder)
         >>> y_hats, logits = model()
     """

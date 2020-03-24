@@ -74,6 +74,7 @@ class DecoderRNN(nn.Module):
         """ forward one time step """
         batch_size = input.size(0)
         output_size = input.size(1)
+
         embedded = self.embedding(input).to(self.device)
         embedded = self.input_dropout(embedded)
 
