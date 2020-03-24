@@ -70,7 +70,7 @@ class DecoderRNN(nn.Module):
         if use_attention:
             self.attention = Attention(hidden_size)
 
-    def _forward_step(self, input, decoder_hidden, encoder_outputs=None, function=F.log_softmax):
+    def _forward_step(self, input, hidden, encoder_outputs=None, function=F.log_softmax):
         """ forward one time step """
         batch_size = input.size(0)
         output_size = input.size(1)
@@ -79,30 +79,28 @@ class DecoderRNN(nn.Module):
 
         if self.training:
             self.rnn.flatten_parameters()
-        decoder_output = self.rnn(embedded, decoder_hidden)[0]
+
+        output, hidden = self.rnn(embedded, hidden)
 
         if self.use_attention:
-            output = self.attention(decoder_output, encoder_outputs)
-        else:
-            output = decoder_output
+            output = self.attention(output, encoder_outputs)
 
-        predicted_softmax = function(self.w(output.contiguous().view(-1, self.hidden_size)), dim=1).view(batch_size, output_size, -1)
-        return predicted_softmax
+        predicted_softmax = function(self.out(output.contiguous().view(-1, self.hidden_size)), dim=1).view(batch_size, output_size, -1)
+
+        return predicted_softmax, hidden
 
     def forward(self, inputs, encoder_outputs, function=F.log_softmax, teacher_forcing_ratio=0.90, use_beam_search=False):
-        y_hats, logits = None, None
         decode_results = []
         batch_size = inputs.size(0)
         max_len = inputs.size(1) - 1  # minus the start of sequence symbol
-        decoder_hidden = torch.FloatTensor(self.n_layers, batch_size, self.hidden_size).uniform_(-0.1, 0.1).to(self.device)
         use_teacher_forcing = True if random.random() < teacher_forcing_ratio else False
 
+        hidden = torch.zeros(self.n_layers, batch_size, self.hidden_size)
+
         if use_beam_search:
-            """ Beam-Search Decoding """
-            inputs = inputs[:, 0].unsqueeze(1)
+            inputs = inputs[:, 0].unsqueeze(1) # Beam-Search Decoding
             beam = Beam(
                 k = self.k,
-                decoder_hidden = decoder_hidden,
                 decoder = self,
                 batch_size = batch_size,
                 max_len = max_len,
@@ -110,25 +108,29 @@ class DecoderRNN(nn.Module):
                 device = self.device
             )
             y_hats = beam.search(inputs, encoder_outputs)
+            logits = None
         else:
             if use_teacher_forcing:
                 # if teacher_forcing, Infer all at once
                 inputs = inputs[inputs != self.eos_id].view(batch_size, -1)
-                predicted_softmax = self._forward_step(
+                predicted_softmax, hidden = self._forward_step(
                     input = inputs,
-                    decoder_hidden = decoder_hidden,
+                    hidden = hidden,
                     encoder_outputs = encoder_outputs,
                     function = function
                 )
+
                 for di in range(predicted_softmax.size(1)):
                     step_output = predicted_softmax[:, di, :]
                     decode_results.append(step_output)
+
             else:
                 input = inputs[:, 0].unsqueeze(1)
+
                 for di in range(max_len):
-                    predicted_softmax = self._forward_step(
+                    predicted_softmax, hidden = self._forward_step(
                         input = input,
-                        decoder_hidden = decoder_hidden,
+                        hidden = hidden,
                         encoder_outputs = encoder_outputs,
                         function = function
                     )
@@ -138,4 +140,5 @@ class DecoderRNN(nn.Module):
 
             logits = torch.stack(decode_results, dim=1).to(self.device)
             y_hats = logits.max(-1)[1]
+
         return y_hats, logits
