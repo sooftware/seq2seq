@@ -16,7 +16,7 @@ class DecoderRNN(nn.Module):
     Converts higher level features (from encoder) into output sequence.
 
     Args:
-        vocab_size (int): size of the vocabulary
+        class_num (int): the number of class
         max_len (int): a maximum allowed length for the sequence to be processed
         hidden_size (int): the number of features in the hidden state `h`
         sos_id (int): index of the start of sentence symbol
@@ -40,21 +40,21 @@ class DecoderRNN(nn.Module):
 
     Returns: y_hats, logits
         - **y_hats** (batch, seq_len): predicted y values (y_hat) by the model
-        - **logits** (batch, seq_len, vocab_size): predicted log probability by the model
+        - **logits** (batch, seq_len, class_num): predicted log probability by the model
 
     Examples::
 
-        >>> decoder = DecoderRNN(vocab_size, max_len, hidden_size, sos_id, eos_id, n_layers)
+        >>> decoder = DecoderRNN(class_num, max_len, hidden_size, sos_id, eos_id, n_layers)
         >>> y_hats, logits = decoder(inputs, encoder_outputs, teacher_forcing_ratio=0.90)
     """
-    def __init__(self, vocab_size, max_len, hidden_size,
+    def __init__(self, class_num, max_len, hidden_size,
                  sos_id, eos_id,
                  n_layers=1, rnn_cell='gru', dropout_p=0.5,
-                 use_attention=True, device=None, use_beam_search=True, k=8):
+                 use_attention=True, device=None, use_beam_search=False, k=8):
         super(DecoderRNN, self).__init__()
         self.rnn_cell = nn.LSTM if rnn_cell.lower() == 'lstm' else nn.GRU if rnn_cell.lower() == 'gru' else nn.RNN
         self.rnn = self.rnn_cell(hidden_size , hidden_size, n_layers, batch_first=True, dropout=dropout_p)
-        self.output_size = vocab_size
+        self.output_size = class_num
         self.max_length = max_len
         self.use_attention = use_attention
         self.eos_id = eos_id
