@@ -25,7 +25,7 @@ class Attention(nn.Module):
     """
     def __init__(self, decoder_hidden_size):
         super(Attention, self).__init__()
-        self.w = nn.Linear(decoder_hidden_size*2, decoder_hidden_size)
+        self.out = nn.Linear(decoder_hidden_size*2, decoder_hidden_size)
 
     def forward(self, decoder_output, encoder_outputs):
         batch_size = decoder_output.size(0)
@@ -40,5 +40,5 @@ class Attention(nn.Module):
         context = torch.bmm(attn_distribution, encoder_outputs) # get attention value
         # concatenate attn_val & decoder_output
         combined = torch.cat((context, decoder_output), dim=2)
-        output = torch.tanh(self.w(combined.view(-1, 2 * hidden_size))).view(batch_size, -1, hidden_size)
+        output = torch.tanh(self.out(combined.view(-1, 2 * hidden_size))).view(batch_size, -1, hidden_size)
         return output
