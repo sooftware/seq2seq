@@ -1,7 +1,9 @@
 # PyTorch-Seq2seq
   
-### Implementation Seq2seq using PyTorch  
+### Seq2seq Architecture in PyTorch  
 [<img src="https://github.com/gentaiscool/end2end-asr-pytorch/raw/master/img/pytorch-logo-dark.png" height=18>](https://pytorch.org/) <img src="https://img.shields.io/badge/License-Apache--2.0-yellow" height=20>
+  
+### [**Documentation**](https://sooftware.github.io/PyTorch-Seq2seq/.)
   
 ## Intro
   
