@@ -70,7 +70,7 @@ class DecoderRNN(nn.Module):
         if use_attention:
             self.attention = Attention(hidden_size)
 
-    def _forward_step(self, input, hidden, encoder_outputs=None, function=F.log_softmax):
+    def forward_step(self, input, hidden, encoder_outputs=None, function=F.log_softmax):
         """ forward one time step """
         batch_size = input.size(0)
         seq_length = input.size(1)
@@ -116,7 +116,7 @@ class DecoderRNN(nn.Module):
         else:
             if use_teacher_forcing:  # if teacher_forcing, Infer all at once
                 inputs = inputs[inputs != self.eos_id].view(batch_size, -1)
-                predicted_softmax, hidden = self._forward_step(
+                predicted_softmax, hidden = self.forward_step(
                     input = inputs,
                     hidden = hidden,
                     encoder_outputs = encoder_outputs,
@@ -131,7 +131,7 @@ class DecoderRNN(nn.Module):
                 input = inputs[:, 0].unsqueeze(1)
 
                 for di in range(max_len):
-                    predicted_softmax, hidden = self._forward_step(
+                    predicted_softmax, hidden = self.forward_step(
                         input = input,
                         hidden = hidden,
                         encoder_outputs = encoder_outputs,
