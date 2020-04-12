@@ -1,13 +1,13 @@
-# PyTorch-Seq2seq
+# Pytorch-Seq2seq
   
-### Seq2seq Architecture in PyTorch  
+### Seq2seq Architecture in Pytorch  
 [<img src="https://github.com/gentaiscool/end2end-asr-pytorch/raw/master/img/pytorch-logo-dark.png" height=18>](https://pytorch.org/) <img src="https://img.shields.io/badge/License-Apache--2.0-yellow" height=20>
   
 ### [**Documentation**](https://sooftware.github.io/PyTorch-Seq2seq/.)
   
 ## Intro
   
-This is a framework for Attention based Sequence-to-Sequence (seq2seq) models implemented in [PyTorch](https://pytorch.org/).  
+This is a framework for Attention based Sequence-to-Sequence (seq2seq) models implemented in [Pytorch](https://pytorch.org/).  
 We appreciate any kind of feedback or contribution.  
    
 ![model](https://camo.githubusercontent.com/9e88497fcdec5a9c716e0de5bc4b6d1793c6e23f/687474703a2f2f73757269796164656570616e2e6769746875622e696f2f696d672f736571327365712f73657132736571322e706e67)
