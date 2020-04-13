@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Models &mdash; Korean Speech Recognition 1.0 documentation</title>
+  <title>Models &mdash; Pytorch-Seq2seq 1.0 documentation</title>
   
 
   
@@ -49,7 +49,7 @@
           
 
           
-            <a href="index.html" class="icon icon-home"> Korean Speech Recognition
+            <a href="index.html" class="icon icon-home"> Pytorch-Seq2seq
           
 
           
@@ -111,7 +111,7 @@
       <nav class="wy-nav-top" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="index.html">Korean Speech Recognition</a>
+          <a href="index.html">Pytorch-Seq2seq</a>
         
       </nav>
 
@@ -174,8 +174,8 @@
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>encoder</strong> (<a class="reference external" href="https://pytorch.org/docs/master/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.5.0a0+3f896ef ))"><em>torch.nn.Module</em></a>) – encoder of seq2seq</li>
-<li><strong>decoder</strong> (<a class="reference external" href="https://pytorch.org/docs/master/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.5.0a0+3f896ef ))"><em>torch.nn.Module</em></a>) – decoder of seq2seq</li>
+<li><strong>encoder</strong> (<a class="reference external" href="https://pytorch.org/docs/master/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.6.0a0+e3b6dd1 ))"><em>torch.nn.Module</em></a>) – encoder of seq2seq</li>
+<li><strong>decoder</strong> (<a class="reference external" href="https://pytorch.org/docs/master/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.6.0a0+e3b6dd1 ))"><em>torch.nn.Module</em></a>) – decoder of seq2seq</li>
 <li><strong>function</strong> (<em>torch.nn.functional</em>) – A function used to generate symbols from RNN hidden state</li>
 </ul>
 </td>
@@ -342,6 +342,12 @@ registered hooks while the latter silently ignores them.</p>
 </div>
 </dd></dl>
 
+<dl class="method">
+<dt id="models.decoderRNN.DecoderRNN.forward_step">
+<code class="descname">forward_step</code><span class="sig-paren">(</span><em>input</em>, <em>hidden</em>, <em>encoder_outputs=None</em>, <em>function=&lt;function log_softmax&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/models/decoderRNN.html#DecoderRNN.forward_step"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#models.decoderRNN.DecoderRNN.forward_step" title="Permalink to this definition">¶</a></dt>
+<dd><p>forward one time step</p>
+</dd></dl>
+
 </dd></dl>
 
 </div>
@@ -359,11 +365,11 @@ registered hooks while the latter silently ignores them.</p>
 <li><strong>k</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a>) – size of beam</li>
 <li><strong>batch_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a>) – mini-batch size during infer</li>
 <li><strong>max_len</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a>) – a maximum allowed length for the sequence to be processed</li>
-<li><strong>function</strong> (<a class="reference external" href="https://pytorch.org/docs/master/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.5.0a0+3f896ef ))"><em>torch.nn.Module</em></a>) – A function used to generate symbols from RNN hidden state</li>
+<li><strong>function</strong> (<a class="reference external" href="https://pytorch.org/docs/master/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.6.0a0+e3b6dd1 ))"><em>torch.nn.Module</em></a>) – A function used to generate symbols from RNN hidden state</li>
 <li><strong>(</strong><strong>default</strong> – torch.nn.functional.log_softmax)</li>
-<li><strong>decoder</strong> (<a class="reference external" href="https://pytorch.org/docs/master/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.5.0a0+3f896ef ))"><em>torch.nn.Module</em></a>) – get pointer of decoder object to get multiple parameters at once</li>
-<li><strong>beams</strong> (<a class="reference external" href="https://pytorch.org/docs/master/tensors.html#torch.Tensor" title="(in PyTorch vmaster (1.5.0a0+3f896ef ))"><em>torch.Tensor</em></a>) – ongoing beams for decoding</li>
-<li><strong>probs</strong> (<a class="reference external" href="https://pytorch.org/docs/master/tensors.html#torch.Tensor" title="(in PyTorch vmaster (1.5.0a0+3f896ef ))"><em>torch.Tensor</em></a>) – cumulative probability of beams (score of beams)</li>
+<li><strong>decoder</strong> (<a class="reference external" href="https://pytorch.org/docs/master/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.6.0a0+e3b6dd1 ))"><em>torch.nn.Module</em></a>) – get pointer of decoder object to get multiple parameters at once</li>
+<li><strong>beams</strong> (<a class="reference external" href="https://pytorch.org/docs/master/tensors.html#torch.Tensor" title="(in PyTorch vmaster (1.6.0a0+e3b6dd1 ))"><em>torch.Tensor</em></a>) – ongoing beams for decoding</li>
+<li><strong>probs</strong> (<a class="reference external" href="https://pytorch.org/docs/master/tensors.html#torch.Tensor" title="(in PyTorch vmaster (1.6.0a0+e3b6dd1 ))"><em>torch.Tensor</em></a>) – cumulative probability of beams (score of beams)</li>
 <li><strong>sentences</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.8)"><em>list</em></a>) – store beams which met &lt;eos&gt; token and terminated decoding process.</li>
 <li><strong>sentence_probs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.8)"><em>list</em></a>) – score of sentences</li>
 </ul>
@@ -391,13 +397,8 @@ registered hooks while the latter silently ignores them.</p>
 </div>
 <dl class="method">
 <dt id="models.beam.Beam.search">
-<code class="descname">search</code><span class="sig-paren">(</span><em>decoder_input</em>, <em>encoder_outputs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/models/beam.html#Beam.search"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#models.beam.Beam.search" title="Permalink to this definition">¶</a></dt>
+<code class="descname">search</code><span class="sig-paren">(</span><em>input</em>, <em>encoder_outputs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/models/beam.html#Beam.search"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#models.beam.Beam.search" title="Permalink to this definition">¶</a></dt>
 <dd><p>Beam-Search Decoding (Top-K Decoding)</p>
-<p>Examples:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">beam</span> <span class="o">=</span> <span class="n">Beam</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">decoder</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">,</span> <span class="n">max_len</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">log_softmax</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">y_hats</span> <span class="o">=</span> <span class="n">beam</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">encoder_outputs</span><span class="p">)</span>
-</pre></div>
-</div>
 </dd></dl>
 
 </dd></dl>
@@ -473,7 +474,7 @@ registered hooks while the latter silently ignores them.</p>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2020, SooHwan Kim
+        &copy; Copyright 2020, sooftware
 
     </p>
   </div>

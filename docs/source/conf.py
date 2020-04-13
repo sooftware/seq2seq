@@ -21,14 +21,13 @@ sys.path.append(os.path.abspath('../..'))
 cwd = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.abspath(os.path.join(cwd, '../../')))
 sys.path.append(os.path.abspath(os.path.join(cwd, '../../../')))
-sys.path.append("C:/SooHwanKim/Desktop/SooHwan/Workspace/python_workspace/Korean-Speech-Recognition/")
 import sphinx_rtd_theme
 
 
 # -- Project information -----------------------------------------------------
 
-project = 'Korean Speech Recognition'
-copyright = '2020, SooHwan Kim'
+project = 'Pytorch-Seq2seq'
+copyright = '2020, sooftware'
 author = 'SooHwan Kim'
 
 # The short X.Y version
@@ -137,7 +136,7 @@ html_static_path = ['_static']
 # -- Options for HTMLHelp output ---------------------------------------------
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'KoreanSpeechRecognitiondoc'
+htmlhelp_basename = 'PytorchSeq2seqdoc'
 
 
 # -- Options for LaTeX output ------------------------------------------------
@@ -164,7 +163,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'KoreanSpeechRecognition.tex', 'Korean Speech Recognition Documentation',
+    (master_doc, 'Pytorch-Seq2seq.tex', 'Pytorch-Seq2seq Documentation',
      'SooHwan Kim', 'manual'),
 ]
 
@@ -174,7 +173,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'koreanspeechrecognition', 'Korean Speech Recognition Documentation',
+    (master_doc, 'pytorchseq2seq', 'Pytorch-Seq2seq Documentation',
      [author], 1)
 ]
 
@@ -185,8 +184,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'KoreanSpeechRecognition', 'Korean Speech Recognition Documentation',
-     author, 'KoreanSpeechRecognition', 'One line description of project.',
+    (master_doc, 'PytorchSeq2seq', 'Pytorch-Seq2seq Documentation',
+     author, 'Pytorch-Seq2seq', 'One line description of project.',
      'Miscellaneous'),
 ]
 
