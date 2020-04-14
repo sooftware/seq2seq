@@ -5,11 +5,6 @@ import torch.nn.functional as F
 from models.beam import Beam
 from .attention import Attention
 
-if torch.cuda.is_available():
-    import torch.cuda as device
-else:
-    import torch as device
-
 
 class DecoderRNN(nn.Module):
     r"""
@@ -47,13 +42,14 @@ class DecoderRNN(nn.Module):
         >>> decoder = DecoderRNN(class_num, max_len, hidden_size, sos_id, eos_id, n_layers)
         >>> y_hats, logits = decoder(inputs, encoder_outputs, teacher_forcing_ratio=0.90)
     """
+
     def __init__(self, class_num, max_len, hidden_size,
                  sos_id, eos_id,
                  n_layers=1, rnn_cell='gru', dropout_p=0.5,
                  use_attention=True, device=None, use_beam_search=False, k=8):
         super(DecoderRNN, self).__init__()
         self.rnn_cell = nn.LSTM if rnn_cell.lower() == 'lstm' else nn.GRU if rnn_cell.lower() == 'gru' else nn.RNN
-        self.rnn = self.rnn_cell(hidden_size , hidden_size, n_layers, batch_first=True, dropout=dropout_p)
+        self.rnn = self.rnn_cell(hidden_size, hidden_size, n_layers, batch_first=True, dropout=dropout_p)
         self.output_size = class_num
         self.max_length = max_len
         self.use_attention = use_attention
@@ -71,7 +67,6 @@ class DecoderRNN(nn.Module):
             self.attention = Attention(hidden_size)
 
     def forward_step(self, input, hidden, encoder_outputs=None, function=F.log_softmax):
-        """ forward one time step """
         batch_size = input.size(0)
         seq_length = input.size(1)
 
@@ -91,25 +86,27 @@ class DecoderRNN(nn.Module):
 
         return predicted_softmax, hidden
 
-    def forward(self, inputs, encoder_outputs, function=F.log_softmax, teacher_forcing_ratio=0.90, use_beam_search=False):
-        decode_results = []
+    def forward(self, inputs, encoder_outputs, function=F.log_softmax, teacher_forcing_ratio=0.90,
+                use_beam_search=False):
         batch_size = inputs.size(0)
-        max_len = inputs.size(1) - 1  # minus the start of sequence symbol
+        max_length = inputs.size(1) - 1  # minus the start of sequence symbol
+
+        decode_results = list()
         use_teacher_forcing = True if random.random() < teacher_forcing_ratio else False
 
-        hidden = torch.zeros(self.n_layers, batch_size, self.hidden_size)
+        hidden = self._init_state(batch_size)
 
         if use_beam_search:
             logits = None
             inputs = inputs[:, 0].unsqueeze(1)
 
             beam = Beam(
-                k = self.k,
-                decoder = self,
-                batch_size = batch_size,
-                max_len = max_len,
-                function = function,
-                device = self.device
+                k=self.k,
+                decoder=self,
+                batch_size=batch_size,
+                max_len=max_length,
+                function=function,
+                device=self.device
             )
             y_hats = beam.search(inputs, encoder_outputs)
 
@@ -117,10 +114,10 @@ class DecoderRNN(nn.Module):
             if use_teacher_forcing:  # if teacher_forcing, Infer all at once
                 inputs = inputs[inputs != self.eos_id].view(batch_size, -1)
                 predicted_softmax, hidden = self.forward_step(
-                    input = inputs,
-                    hidden = hidden,
-                    encoder_outputs = encoder_outputs,
-                    function = function
+                    input=inputs,
+                    hidden=hidden,
+                    encoder_outputs=encoder_outputs,
+                    function=function
                 )
 
                 for di in range(predicted_softmax.size(1)):
@@ -130,12 +127,12 @@ class DecoderRNN(nn.Module):
             else:
                 input = inputs[:, 0].unsqueeze(1)
 
-                for di in range(max_len):
+                for di in range(max_length):
                     predicted_softmax, hidden = self.forward_step(
-                        input = input,
-                        hidden = hidden,
-                        encoder_outputs = encoder_outputs,
-                        function = function
+                        input=input,
+                        hidden=hidden,
+                        encoder_outputs=encoder_outputs,
+                        function=function
                     )
                     step_output = predicted_softmax.squeeze(1)
                     decode_results.append(step_output)
@@ -145,3 +142,14 @@ class DecoderRNN(nn.Module):
             y_hats = logits.max(-1)[1]
 
         return y_hats, logits
+
+    def _init_state(self, batch_size):
+        if isinstance(self.rnn, nn.LSTM):
+            h_0 = torch.zeros(self.n_layers, batch_size, self.hidden_size).to(self.device)
+            c_0 = torch.zeros(self.n_layers, batch_size, self.hidden_size).to(self.device)
+            hidden = (h_0, c_0)
+
+        else:
+            hidden = torch.zeros(self.n_layers, batch_size, self.hidden_size).to(self.device)
+
+        return hidden
