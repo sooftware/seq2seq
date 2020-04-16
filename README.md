@@ -64,8 +64,8 @@ I follow [PEP-8](https://www.python.org/dev/peps/pep-0008/) for code style. Espe
   
 ## Reference
 [[1]   IBM pytorch-seq2seq](https://github.com/IBM/pytorch-seq2seq)   
-[[2]   Pytorch-Speech-Recognition](https://github.com/sooftware/Korean-Speech-Recognition)      
-[[3]   Pytorch-NMT](https://github.com/sooftware/PyTorch-NMT)      
+[[2]   Pytorch-End-to-End-Korean-Speech-Recognition](https://github.com/sooftware/End-to-End-Korean-Speech-Recognition)      
+[[3]   RNN Language Model](https://github.com/sooftware/char-rnnlm)      
   
 ## License
 ```
@@ -73,10 +73,7 @@ Copyright (c) 2020 sooftware
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
+You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
