@@ -14,6 +14,8 @@ We appreciate any kind of feedback or contribution.
   
 ## How To Use  
   
+### Training
+
 ```python
 from models.encoderRNN import EncoderRNN
 from models.decoderRNN import DecoderRNN
@@ -25,7 +27,7 @@ encoder = EncoderRNN(
     dropout_p = config.dropout_p, 
     n_layers = config.encoder_layer_size, 
     bidirectional = bidirectional, 
-    rnn_cell = 'gru'
+    rnn_type = 'gru'
 )
 decoder = DecoderRNN(
     class_num = class_num, 
@@ -34,7 +36,7 @@ decoder = DecoderRNN(
     sos_id = SOS_token, 
     eos_id = EOS_token,
     n_layers = config.decoder_layer_size, 
-    rnn_cell = 'gru', 
+    rnn_type = 'gru', 
     dropout_p = config.dropout_p,
     use_attention = config.use_attention, 
     device = device, 
@@ -42,8 +44,18 @@ decoder = DecoderRNN(
     k = 8
  )
  model = Seq2seq(encoder, decoder)
+
+ y_hats, logits = model(inputs, targets, teacher_forcing_ratio=teacher_forcing_ratio)
 ```
   
+### Performance Test
+```python
+model = torch.load('weight_path')
+model.set_beam_size(k=5)
+
+y_hat, _ = model(inputs, targets, teacher_forcing_ratio=0.0, use_beam_search=True)
+```
+
 ## Installation
 This project recommends Python 3.7 or higher.   
 I recommend creating a new virtual environment for this project (using virtualenv or conda).  
