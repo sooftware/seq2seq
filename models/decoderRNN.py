@@ -3,7 +3,13 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from models.beam import Beam
-from .attention import Attention
+from .attention import MultiHeadAttention
+
+supported_rnns = {
+    'lstm': nn.LSTM,
+    'gru': nn.GRU,
+    'rnn': nn.RNN
+}
 
 
 class DecoderRNN(nn.Module):
@@ -16,7 +22,7 @@ class DecoderRNN(nn.Module):
         hidden_size (int): the number of features in the hidden state `h`
         sos_id (int): index of the start of sentence symbol
         eos_id (int): index of the end of sentence symbol
-        layer_size (int, optional): number of recurrent layers (default: 1)
+        n_layers (int, optional): number of recurrent layers (default: 1)
         rnn_cell (str, optional): type of RNN cell (default: gru)
         dropout_p (float, optional): dropout probability for the output sequence (default: 0)
         use_attention (bool, optional): flag indication whether to use attention mechanism or not (default: false)
@@ -45,32 +51,35 @@ class DecoderRNN(nn.Module):
 
     def __init__(self, class_num, max_len, hidden_size,
                  sos_id, eos_id,
-                 n_layers=1, rnn_cell='gru', dropout_p=0.5,
+                 n_layers=1, rnn_type='gru', dropout_p=0.5,
                  use_attention=True, device=None, use_beam_search=False, k=8):
+
         super(DecoderRNN, self).__init__()
-        self.rnn_cell = nn.LSTM if rnn_cell.lower() == 'lstm' else nn.GRU if rnn_cell.lower() == 'gru' else nn.RNN
+        assert rnn_type.lower() in supported_rnns.keys(), 'RNN type not supported.'
+
+        self.rnn_cell = supported_rnns[rnn_type]
         self.rnn = self.rnn_cell(hidden_size, hidden_size, n_layers, batch_first=True, dropout=dropout_p)
         self.output_size = class_num
         self.max_length = max_len
         self.use_attention = use_attention
         self.eos_id = eos_id
         self.sos_id = sos_id
-        self.hidden_size = hidden_size
-        self.embedding = nn.Embedding(self.output_size, self.hidden_size)
-        self.out = nn.Linear(self.hidden_size, self.output_size)
         self.n_layers = n_layers
-        self.input_dropout = nn.Dropout(p=dropout_p)
+        self.hidden_size = hidden_size
         self.device = device
         self.use_beam_search = use_beam_search
         self.k = k
+        self.embedding = nn.Embedding(self.output_size, self.hidden_size)
+        self.input_dropout = nn.Dropout(p=dropout_p)
+        self.out = nn.Linear(self.hidden_size, self.output_size)
         if use_attention:
-            self.attention = Attention(hidden_size)
+            self.attention = MultiHeadAttention(in_features=hidden_size, dim=128, n_head=4)
 
-    def forward_step(self, input, hidden, encoder_outputs=None, function=F.log_softmax):
-        batch_size = input.size(0)
-        seq_length = input.size(1)
+    def forward_step(self, input_, hidden, encoder_outputs=None, function=F.log_softmax):
+        batch_size = input_.size(0)
+        seq_length = input_.size(1)
 
-        embedded = self.embedding(input).to(self.device)
+        embedded = self.embedding(input_).to(self.device)
         embedded = self.input_dropout(embedded)
 
         if self.training:
@@ -114,7 +123,7 @@ class DecoderRNN(nn.Module):
             if use_teacher_forcing:  # if teacher_forcing, Infer all at once
                 inputs = inputs[inputs != self.eos_id].view(batch_size, -1)
                 predicted_softmax, hidden = self.forward_step(
-                    input=inputs,
+                    input_=inputs,
                     hidden=hidden,
                     encoder_outputs=encoder_outputs,
                     function=function
@@ -125,18 +134,18 @@ class DecoderRNN(nn.Module):
                     decode_results.append(step_output)
 
             else:
-                input = inputs[:, 0].unsqueeze(1)
+                input_ = inputs[:, 0].unsqueeze(1)
 
                 for di in range(max_length):
                     predicted_softmax, hidden = self.forward_step(
-                        input=input,
+                        input_=input_,
                         hidden=hidden,
                         encoder_outputs=encoder_outputs,
                         function=function
                     )
                     step_output = predicted_softmax.squeeze(1)
                     decode_results.append(step_output)
-                    input = decode_results[-1].topk(1)[1]
+                    input_ = decode_results[-1].topk(1)[1]
 
             logits = torch.stack(decode_results, dim=1).to(self.device)
             y_hats = logits.max(-1)[1]

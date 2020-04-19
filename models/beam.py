@@ -13,7 +13,7 @@ class Beam:
         (default : torch.nn.functional.log_softmax)
         decoder (torch.nn.Module) : get pointer of decoder object to get multiple parameters at once
         beams (torch.Tensor) : ongoing beams for decoding
-        probs (torch.Tensor) : cumulative probability of beams (score of beams)
+        cumulative_probs (torch.Tensor) : cumulative probability of beams (score of beams)
         sentences (list) : store beams which met <eos> token and terminated decoding process.
         sentence_probs (list) : score of sentences
 
@@ -29,9 +29,10 @@ class Beam:
         >>> beam = Beam(k, decoder, batch_size, max_len, F.log_softmax)
         >>> y_hats = beam.search(inputs, encoder_outputs)
     """
+
     def __init__(self, k, decoder, batch_size, max_len, function, device):
 
-        #assert k > 1, "beam size (k) should be bigger than 1"
+        assert k > 1, "beam size (k) should be bigger than 1"
 
         self.k = k
         self.batch_size = batch_size
@@ -51,24 +52,23 @@ class Beam:
         self.sentence_probs = [[] for _ in range(self.batch_size)]
         self.device = device
 
-
-    def search(self, input, encoder_outputs):
+    def search(self, input_, encoder_outputs):
         """ Beam-Search Decoding (Top-K Decoding) """
         hidden = torch.zeros(self.n_layers, self.batch_size, self.hidden_size)
-        step_outputs, hidden = self._forward_step(input, hidden, encoder_outputs)
-        self.cumulative_probs, self.beams = step_outputs.topk(self.k) # BxK
+        step_outputs, hidden = self._forward_step(input_, hidden, encoder_outputs)
+        self.cumulative_probs, self.beams = step_outputs.topk(self.k)  # BxK
 
-        input = self.beams
+        input_ = self.beams
         self.beams = self.beams.unsqueeze(2)
 
-        for di in range(self.max_len-1):
+        for di in range(self.max_len - 1):
             if self._is_done():
                 break
 
-            step_outputs, hidden = self._forward_step(input, hidden, encoder_outputs)
+            step_outputs, hidden = self._forward_step(input_, hidden, encoder_outputs)
             probs, values = step_outputs.topk(self.k)
 
-            self.cumulative_probs /= self._get_length_penalty(length=di+1, alpha=1.2, min_length=5)
+            self.cumulative_probs /= self._get_length_penalty(length=di + 1, alpha=1.2, min_length=5)
             probs = self.cumulative_probs.unsqueeze(1) + probs
 
             probs = probs.view(self.batch_size, self.k * self.k)
@@ -91,41 +91,39 @@ class Beam:
             # if any beam encounter eos_id
             if torch.any(topk_values == self.eos_id):
                 done_ids = torch.where(topk_values == self.eos_id)
-                next = [1] * self.batch_size
+                next_ = [1] * self.batch_size
 
                 for (batch_num, beam_idx) in zip(*done_ids):
                     self.sentences[batch_num].append(self.beams[batch_num, beam_idx])
                     self.sentence_probs[batch_num].append(self.cumulative_probs[batch_num, beam_idx])
                     self._replace_beam(
-                        probs = probs,
-                        values = values,
-                        done_ids = (batch_num, beam_idx),
-                        next = next[batch_num]
+                        probs=probs,
+                        values=values,
+                        done_ids=(batch_num, beam_idx),
+                        next_=next_[batch_num]
                     )
-                    next[batch_num] += 1
+                    next_[batch_num] += 1
 
-            input = topk_values
+            input_ = topk_values
 
         return self._get_best()
 
-
-    def _forward_step(self, input, hidden, encoder_outputs):
+    def _forward_step(self, input_, hidden, encoder_outputs):
         """ forward one step on each decoder cell """
-        input = input.to(self.device)
-        output_size = input.size(1) # 1
+        input_ = input_.to(self.device)
+        output_size = input_.size(1)  # 1
 
-        embedded = self.embedding(input).to(self.device)
+        embedded = self.embedding(input_).to(self.device)
         output, hidden = self.rnn(embedded, hidden)
 
         if self.use_attention:
             output = self.attention(output, encoder_outputs)
 
         predicted_softmax = self.function(self.out(output.contiguous().view(-1, self.hidden_size)), dim=1)
-        predicted_softmax = predicted_softmax.view(self.batch_size,output_size,-1)
+        predicted_softmax = predicted_softmax.view(self.batch_size, output_size, -1)
         step_outputs = predicted_softmax.squeeze(1)
 
         return step_outputs, hidden
-
 
     def _get_best(self):
         """ get sentences which has the highest probability at each batch, stack it, and return it as 2d torch """
@@ -147,7 +145,6 @@ class Beam:
 
         return y_hats
 
-
     def _match_len(self, y_hats):
         max_len = -1
 
@@ -159,11 +156,9 @@ class Beam:
 
         for batch_num, y_hat in enumerate(y_hats):
             matched[batch_num, :len(y_hat)] = y_hat
-            matched[batch_num, len(y_hat):] = 0 # id of ' '
+            matched[batch_num, len(y_hat):] = 0   # id of <PAD_token>
 
         return matched
-
-
 
     def _is_done(self):
         """ check if all beam search process has terminated """
@@ -173,7 +168,6 @@ class Beam:
 
         return True
 
-
     def _get_length_penalty(self, length, alpha=1.2, min_length=5):
         """
         Calculate length-penalty.
@@ -182,12 +176,11 @@ class Beam:
         """
         return ((min_length + length) / (min_length + 1)) ** alpha
 
-
-    def _replace_beam(self, probs, values, done_ids, next):
+    def _replace_beam(self, probs, values, done_ids, next_):
         """ Replaces a beam that ends with <eos> with a beam with the next higher probability. """
         done_batch_num, done_beam_idx = done_ids
 
-        replace_ids = probs.topk(self.k + next)[1]
+        replace_ids = probs.topk(self.k + next_)[1]
         replace_idx = replace_ids[done_batch_num, -1]
 
         new_prob = probs[done_batch_num, replace_idx].to(self.device)

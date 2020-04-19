@@ -1,5 +1,11 @@
 import torch.nn as nn
-import torch
+
+supported_rnns = {
+    'lstm': nn.LSTM,
+    'gru': nn.GRU,
+    'rnn': nn.RNN
+}
+
 
 class EncoderRNN(nn.Module):
     r"""
@@ -10,24 +16,27 @@ class EncoderRNN(nn.Module):
         hidden_size (int): the number of features in the hidden state `h`
         n_layers (int, optional): number of recurrent layers (default: 1)
         bidirectional (bool, optional): if True, becomes a bidirectional encoder (defulat: False)
-        rnn_cell (str, optional): type of RNN cell (default: gru)
+        rnn_type (str, optional): type of RNN cell (default: gru)
         dropout_p (float, optional): dropout probability for the output sequence (default: 0)
 
     Inputs: inputs
-        - **inputs**: list of sequences, whose length is the batch size and within which each sequence is a list of token IDs.
+        - **inputs**: list of sequences, whose length is the batch size and within which each sequence is list of tokens
 
     Returns: output, hidden
         - **output** (batch, seq_len, hidden_size): tensor containing the encoded features of the input sequence
-        - **hidden** (num_layers * num_directions, batch, hidden_size): tensor containing the features in the hidden state `h`
+        - **hidden** (num_layers * num_directions, batch, hidden_size): tensor containing the features in the hidden
 
     Examples::
 
         >>> listener = Listener(in_features, hidden_size, dropout_p=0.5, n_layers=5)
         >>> output, hidden = listener(inputs)
     """
-    def __init__(self, in_features, hidden_size, dropout_p=0.5, n_layers=5, bidirectional=True, rnn_cell='gru'):
+    def __init__(self, in_features, hidden_size, dropout_p=0.5, n_layers=5, bidirectional=True, rnn_type='gru'):
+
         super(EncoderRNN, self).__init__()
-        self.rnn_cell = nn.LSTM if rnn_cell.lower() == 'lstm' else nn.GRU if rnn_cell.lower() == 'gru' else nn.RNN
+        assert rnn_type.lower() in supported_rnns.keys(), 'RNN type not supported.'
+
+        self.rnn_cell = supported_rnns[rnn_type]
         self.embedding = nn.Embedding(in_features, hidden_size)
         self.input_dropout = nn.Dropout(dropout_p)
         self.rnn = self.rnn_cell(
