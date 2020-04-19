@@ -40,15 +40,14 @@ class EncoderRNN(nn.Module):
             dropout=dropout_p
         )
 
-
-    def forward(self, inputs):
+    def forward(self, inputs, input_lengths):
         """ Applies a multi-layer RNN to an input sequence """
         embedded = self.embedding(inputs)
         embedded = self.input_dropout(embedded)
 
-        if self.training:
-            self.rnn.flatten_parameters()
+        embedded = nn.utils.rnn.pack_padded_sequence(embedded, input_lengths, batch_first=True)
+        output, hidden = self.rnn(embedded)
 
-        outputs, hiddens = self.rnn(embedded)
+        output, _ = nn.utils.rnn.pad_packed_sequence(output, batch_first=True)
 
-        return outputs, hiddens
+        return output, hidden

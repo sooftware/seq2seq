@@ -36,8 +36,8 @@ class Seq2seq(nn.Module):
         self.decoder = decoder
         self.function = function
 
-    def forward(self, inputs, targets, teacher_forcing_ratio=0.90, use_beam_search=False):
-        encoder_outputs, encoder_hidden = self.encoder(inputs)
+    def forward(self, inputs, targets, input_lengths, teacher_forcing_ratio=0.90, use_beam_search=False):
+        encoder_outputs, encoder_hidden = self.encoder(inputs, input_lengths)
         y_hats, logits = self.decoder(
             inputs=targets,
             encoder_outputs=encoder_outputs,
