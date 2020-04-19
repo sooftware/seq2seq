@@ -1,6 +1,7 @@
 import torch.nn as nn
 import torch.nn.functional as F
 
+
 class Seq2seq(nn.Module):
     r"""
     Sequence to Sequence Model
