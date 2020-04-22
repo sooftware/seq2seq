@@ -17,24 +17,21 @@ class DecoderRNN(nn.Module):
     Converts higher level features (from encoder) into output sequence.
 
     Args:
-        class_num (int): the number of class
+        n_class (int): the number of class
         max_len (int): a maximum allowed length for the sequence to be processed
-        hidden_size (int): the number of features in the hidden state `h`
+        hidden_dim (int): the number of features in the hidden state `h`
         sos_id (int): index of the start of sentence symbol
         eos_id (int): index of the end of sentence symbol
         n_layers (int, optional): number of recurrent layers (default: 1)
-        rnn_cell (str, optional): type of RNN cell (default: gru)
+        rnn_type (str, optional): type of RNN cell (default: gru)
         dropout_p (float, optional): dropout probability for the output sequence (default: 0)
-        use_attention (bool, optional): flag indication whether to use attention mechanism or not (default: false)
         k (int) : size of beam
 
-    Inputs: inputs, encoder_outputs, function, teacher_forcing_ratio
+    Inputs: inputs, encoder_outputs, teacher_forcing_ratio
         - **inputs** (batch, seq_len, input_size): list of sequences, whose length is the batch size and within which
           each sequence is a list of token IDs.  It is used for teacher forcing when provided. (default `None`)
-        - **encoder_outputs** (batch, seq_len, hidden_size): tensor with containing the outputs of the listener.
+        - **encoder_outputs** (batch, seq_len, hidden_dim): tensor with containing the outputs of the listener.
           Used for attention mechanism (default is `None`).
-        - **function** (torch.nn.Module): A function used to generate symbols from RNN hidden state
-          (default is `torch.nn.functional.log_softmax`).
         - **teacher_forcing_ratio** (float): The probability that teacher forcing will be used. A random number is
           drawn uniformly from 0-1 for every decoding token, and if the sample is smaller than the given value,
           teacher forcing would be used (default is 0).
@@ -45,37 +42,33 @@ class DecoderRNN(nn.Module):
 
     Examples::
 
-        >>> decoder = DecoderRNN(class_num, max_len, hidden_size, sos_id, eos_id, n_layers)
+        >>> decoder = DecoderRNN(n_class, max_len, hidden_dim, sos_id, eos_id, n_layers)
         >>> y_hats, logits = decoder(inputs, encoder_outputs, teacher_forcing_ratio=0.90)
     """
 
-    def __init__(self, class_num, max_len, hidden_size,
-                 sos_id, eos_id,
-                 n_layers=1, rnn_type='gru', dropout_p=0.5,
-                 use_attention=True, device=None, use_beam_search=False, k=8):
+    def __init__(self, n_class, max_len, hidden_dim, sos_id, eos_id, n_layers=1,
+                 rnn_type='gru', dropout_p=0.5, device=None, use_beam_search=False, k=5):
 
         super(DecoderRNN, self).__init__()
         assert rnn_type.lower() in supported_rnns.keys(), 'RNN type not supported.'
 
-        self.rnn_cell = supported_rnns[rnn_type]
-        self.rnn = self.rnn_cell(hidden_size, hidden_size, n_layers, batch_first=True, dropout=dropout_p)
-        self.output_size = class_num
+        rnn_cell = supported_rnns[rnn_type]
+        self.rnn = rnn_cell(hidden_dim, hidden_dim, n_layers, batch_first=True, dropout=dropout_p)
+        self.output_size = n_class
         self.max_length = max_len
-        self.use_attention = use_attention
         self.eos_id = eos_id
         self.sos_id = sos_id
         self.n_layers = n_layers
-        self.hidden_size = hidden_size
+        self.hidden_dim = hidden_dim
         self.device = device
         self.use_beam_search = use_beam_search
         self.k = k
-        self.embedding = nn.Embedding(self.output_size, self.hidden_size)
+        self.embedding = nn.Embedding(self.output_size, hidden_dim)
         self.input_dropout = nn.Dropout(p=dropout_p)
-        self.out = nn.Linear(self.hidden_size, self.output_size)
-        if use_attention:
-            self.attention = MultiHeadAttention(in_features=hidden_size, dim=128, n_head=4)
+        self.fc = nn.Linear(self.hidden_dim, self.output_size)
+        self.attention = MultiHeadAttention(in_features=hidden_dim, dim=128, n_head=4)
 
-    def forward_step(self, input_, hidden, encoder_outputs=None, function=F.log_softmax):
+    def forward_step(self, input_, h_state, encoder_outputs=None):
         batch_size = input_.size(0)
         seq_length = input_.size(1)
 
@@ -85,25 +78,22 @@ class DecoderRNN(nn.Module):
         if self.training:
             self.rnn.flatten_parameters()
 
-        output, hidden = self.rnn(embedded, hidden)
+        output, h_state = self.rnn(embedded, h_state)
+        context = self.attention(output, encoder_outputs)
 
-        if self.use_attention:
-            output = self.attention(output, encoder_outputs)
-
-        predicted_softmax = function(self.out(output.contiguous().view(-1, self.hidden_size)), dim=1)
+        predicted_softmax = F.log_softmax(self.fc(context.contiguous().view(-1, self.hidden_dim)), dim=1)
         predicted_softmax = predicted_softmax.view(batch_size, seq_length, -1)
 
-        return predicted_softmax, hidden
+        return predicted_softmax, h_state
 
-    def forward(self, inputs, encoder_outputs, function=F.log_softmax, teacher_forcing_ratio=0.90,
-                use_beam_search=False):
+    def forward(self, inputs, encoder_outputs, teacher_forcing_ratio=0.90, use_beam_search=False):
         batch_size = inputs.size(0)
         max_length = inputs.size(1) - 1  # minus the start of sequence symbol
 
         decode_results = list()
         use_teacher_forcing = True if random.random() < teacher_forcing_ratio else False
 
-        hidden = self._init_state(batch_size)
+        h_state = self._init_state(batch_size)
 
         if use_beam_search:
             logits = None
@@ -114,7 +104,6 @@ class DecoderRNN(nn.Module):
                 decoder=self,
                 batch_size=batch_size,
                 max_len=max_length,
-                function=function,
                 device=self.device
             )
             y_hats = beam.search(inputs, encoder_outputs)
@@ -122,11 +111,10 @@ class DecoderRNN(nn.Module):
         else:
             if use_teacher_forcing:  # if teacher_forcing, Infer all at once
                 inputs = inputs[inputs != self.eos_id].view(batch_size, -1)
-                predicted_softmax, hidden = self.forward_step(
+                predicted_softmax, h_state = self.forward_step(
                     input_=inputs,
-                    hidden=hidden,
-                    encoder_outputs=encoder_outputs,
-                    function=function
+                    h_state=h_state,
+                    encoder_outputs=encoder_outputs
                 )
 
                 for di in range(predicted_softmax.size(1)):
@@ -137,11 +125,10 @@ class DecoderRNN(nn.Module):
                 input_ = inputs[:, 0].unsqueeze(1)
 
                 for di in range(max_length):
-                    predicted_softmax, hidden = self.forward_step(
+                    predicted_softmax, h_state = self.forward_step(
                         input_=input_,
-                        hidden=hidden,
-                        encoder_outputs=encoder_outputs,
-                        function=function
+                        h_state=h_state,
+                        encoder_outputs=encoder_outputs
                     )
                     step_output = predicted_softmax.squeeze(1)
                     decode_results.append(step_output)
@@ -154,11 +141,11 @@ class DecoderRNN(nn.Module):
 
     def _init_state(self, batch_size):
         if isinstance(self.rnn, nn.LSTM):
-            h_0 = torch.zeros(self.n_layers, batch_size, self.hidden_size).to(self.device)
-            c_0 = torch.zeros(self.n_layers, batch_size, self.hidden_size).to(self.device)
-            hidden = (h_0, c_0)
+            h_0 = torch.zeros(self.n_layers, batch_size, self.hidden_dim).to(self.device)
+            c_0 = torch.zeros(self.n_layers, batch_size, self.hidden_dim).to(self.device)
+            h_state = (h_0, c_0)
 
         else:
-            hidden = torch.zeros(self.n_layers, batch_size, self.hidden_size).to(self.device)
+            h_state = torch.zeros(self.n_layers, batch_size, self.hidden_dim).to(self.device)
 
-        return hidden
+        return h_state

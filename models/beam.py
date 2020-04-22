@@ -1,4 +1,5 @@
 import torch
+import torch.nn.functional as F
 
 
 class Beam:
@@ -9,8 +10,6 @@ class Beam:
         k (int) : size of beam
         batch_size (int) : mini-batch size during infer
         max_len (int) :  a maximum allowed length for the sequence to be processed
-        function (torch.nn.Module) : A function used to generate symbols from RNN hidden state
-        (default : torch.nn.functional.log_softmax)
         decoder (torch.nn.Module) : get pointer of decoder object to get multiple parameters at once
         beams (torch.Tensor) : ongoing beams for decoding
         cumulative_probs (torch.Tensor) : cumulative probability of beams (score of beams)
@@ -30,20 +29,19 @@ class Beam:
         >>> y_hats = beam.search(inputs, encoder_outputs)
     """
 
-    def __init__(self, k, decoder, batch_size, max_len, function, device):
+    def __init__(self, k, decoder, batch_size, max_len, device):
 
         assert k > 1, "beam size (k) should be bigger than 1"
 
         self.k = k
         self.batch_size = batch_size
         self.max_len = max_len
-        self.function = function
         self.n_layers = decoder.n_layers
         self.rnn = decoder.rnn
         self.embedding = decoder.embedding
         self.use_attention = decoder.use_attention
         self.attention = decoder.attention
-        self.hidden_size = decoder.hidden_size
+        self.hidden_dim = decoder.hidden_dim
         self.out = decoder.w
         self.eos_id = decoder.eos_id
         self.beams = None
@@ -54,8 +52,8 @@ class Beam:
 
     def search(self, input_, encoder_outputs):
         """ Beam-Search Decoding (Top-K Decoding) """
-        hidden = torch.zeros(self.n_layers, self.batch_size, self.hidden_size)
-        step_outputs, hidden = self._forward_step(input_, hidden, encoder_outputs)
+        h_state = torch.zeros(self.n_layers, self.batch_size, self.hidden_dim)
+        step_outputs, h_state = self._forward_step(input_, h_state, encoder_outputs)
         self.cumulative_probs, self.beams = step_outputs.topk(self.k)  # BxK
 
         input_ = self.beams
@@ -65,7 +63,7 @@ class Beam:
             if self._is_done():
                 break
 
-            step_outputs, hidden = self._forward_step(input_, hidden, encoder_outputs)
+            step_outputs, h_state = self._forward_step(input_, h_state, encoder_outputs)
             probs, values = step_outputs.topk(self.k)
 
             self.cumulative_probs /= self._get_length_penalty(length=di + 1, alpha=1.2, min_length=5)
@@ -108,22 +106,22 @@ class Beam:
 
         return self._get_best()
 
-    def _forward_step(self, input_, hidden, encoder_outputs):
+    def _forward_step(self, input_, h_state, encoder_outputs):
         """ forward one step on each decoder cell """
         input_ = input_.to(self.device)
         output_size = input_.size(1)  # 1
 
         embedded = self.embedding(input_).to(self.device)
-        output, hidden = self.rnn(embedded, hidden)
+        output, h_state = self.rnn(embedded, h_state)
 
         if self.use_attention:
             output = self.attention(output, encoder_outputs)
 
-        predicted_softmax = self.function(self.out(output.contiguous().view(-1, self.hidden_size)), dim=1)
+        predicted_softmax = F.log_softmax(self.out(output.contiguous().view(-1, self.hidden_dim)), dim=1)
         predicted_softmax = predicted_softmax.view(self.batch_size, output_size, -1)
         step_outputs = predicted_softmax.squeeze(1)
 
-        return step_outputs, hidden
+        return step_outputs, h_state
 
     def _get_best(self):
         """ get sentences which has the highest probability at each batch, stack it, and return it as 2d torch """

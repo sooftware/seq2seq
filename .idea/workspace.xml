@@ -2,7 +2,9 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="f56f5247-a2ca-4a5a-aa86-c6cfb59ee7f2" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/models/seq2seq.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/seq2seq.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/models/beam.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/beam.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/models/decoderRNN.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/decoderRNN.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -22,7 +24,7 @@
   </component>
   <component name="ProjectId" id="1alTMaYjz0PdZ3q5VB1xCTtGW95" />
   <component name="PropertiesComponent">
-    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/../End-to-End-Korean-Speech-Recognition" />
   </component>
   <component name="RunDashboard">
     <option name="ruleStates">
