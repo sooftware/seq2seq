@@ -23,22 +23,21 @@ from models.seq2seq import Seq2seq
 
 encoder = EncoderRNN(
     in_features = in_features, 
-    hidden_size = config.hidden_size, 
+    hidden_dim = config.hidden_dim, 
     dropout_p = config.dropout_p, 
     n_layers = config.encoder_layer_size, 
     bidirectional = bidirectional, 
     rnn_type = 'gru'
 )
 decoder = DecoderRNN(
-    class_num = class_num, 
-    max_len = config.max_len, 
-    hidden_size = config.hidden_size if bidirectional else config.hidden_size << 1,
+    n_class = n_class, 
+    max_length = config.max_len, 
+    hidden_dim = config.hidden_dim if bidirectional else config.hidden_dim << 1,
     sos_id = SOS_token, 
     eos_id = EOS_token,
     n_layers = config.decoder_layer_size, 
     rnn_type = 'gru', 
     dropout_p = config.dropout_p,
-    use_attention = config.use_attention, 
     device = device, 
     use_beam_search = False, 
     k = 8
