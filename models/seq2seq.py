@@ -1,5 +1,4 @@
 import torch.nn as nn
-import torch.nn.functional as F
 
 
 class Seq2seq(nn.Module):
@@ -9,7 +8,6 @@ class Seq2seq(nn.Module):
     Args:
         encoder (torch.nn.Module): encoder of seq2seq
         decoder (torch.nn.Module): decoder of seq2seq
-        function (torch.nn.functional): A function used to generate symbols from RNN hidden state
 
     Inputs: inputs, targets, teacher_forcing_ratio, use_beam_search
         - **inputs** (torch.Tensor): tensor of sequences, whose length is the batch size and within which
@@ -31,18 +29,16 @@ class Seq2seq(nn.Module):
         >>> model = Seq2seq(encoder, decoder)
         >>> y_hats, logits = model()
     """
-    def __init__(self, encoder, decoder, function=F.log_softmax):
+    def __init__(self, encoder, decoder):
         super(Seq2seq, self).__init__()
         self.encoder = encoder
         self.decoder = decoder
-        self.function = function
 
     def forward(self, inputs, targets, input_lengths, teacher_forcing_ratio=0.90, use_beam_search=False):
         encoder_outputs, encoder_hidden = self.encoder(inputs, input_lengths)
         y_hats, logits = self.decoder(
             inputs=targets,
             encoder_outputs=encoder_outputs,
-            function=self.function,
             teacher_forcing_ratio=teacher_forcing_ratio,
             use_beam_search=use_beam_search
         )
