@@ -3,14 +3,14 @@
 ### Seq2seq Architecture in Pytorch  
 [<img src="https://github.com/gentaiscool/end2end-asr-pytorch/raw/master/img/pytorch-logo-dark.png" height=18>](https://pytorch.org/) <img src="https://img.shields.io/badge/License-Apache--2.0-yellow" height=20>
   
-### [**Documentation**](https://sooftware.github.io/Pytorch-Seq2seq/)
+### [**Documentation**](https://sooftware.github.io/pytorch-seq2seq/)
   
 ## Intro
   
 This is a framework for Attention based Sequence-to-Sequence (seq2seq) models implemented in [Pytorch](https://pytorch.org/).  
 We appreciate any kind of feedback or contribution.  
    
-![model](https://camo.githubusercontent.com/9e88497fcdec5a9c716e0de5bc4b6d1793c6e23f/687474703a2f2f73757269796164656570616e2e6769746875622e696f2f696d672f736571327365712f73657132736571322e706e67)
+![image](https://user-images.githubusercontent.com/42150335/80314394-59844280-882c-11ea-924b-a3d714c78324.png)
   
 ## How To Use  
   
@@ -23,22 +23,21 @@ from models.seq2seq import Seq2seq
 
 encoder = EncoderRNN(
     in_features = in_features, 
-    hidden_size = config.hidden_size, 
+    hidden_dim = config.hidden_dim, 
     dropout_p = config.dropout_p, 
     n_layers = config.encoder_layer_size, 
     bidirectional = bidirectional, 
     rnn_type = 'gru'
 )
 decoder = DecoderRNN(
-    class_num = class_num, 
-    max_len = config.max_len, 
-    hidden_size = config.hidden_size if bidirectional else config.hidden_size << 1,
+    n_class = n_class, 
+    max_length = config.max_len, 
+    hidden_dim = config.hidden_dim if bidirectional else config.hidden_dim << 1,
     sos_id = SOS_token, 
     eos_id = EOS_token,
     n_layers = config.decoder_layer_size, 
     rnn_type = 'gru', 
     dropout_p = config.dropout_p,
-    use_attention = config.use_attention, 
     device = device, 
     use_beam_search = False, 
     k = 8
@@ -79,16 +78,11 @@ I follow [PEP-8](https://www.python.org/dev/peps/pep-0008/) for code style. Espe
 [[2]   Pytorch-End-to-End-Korean-Speech-Recognition](https://github.com/sooftware/End-to-End-Korean-Speech-Recognition)      
 [[3]   RNN Language Model](https://github.com/sooftware/char-rnnlm)      
   
-## License
+## Citing
 ```
-Copyright (c) 2020 sooftware
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+@source_code{
+  title={pytorch-seq2seq},
+  author={Soohwan Kim},
+  year={2020}
+}
 ```
