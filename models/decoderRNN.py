@@ -2,7 +2,7 @@ import random
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from models.beam import Beam
+from models.beamsearch import BeamSearch
 from .attention import MultiHeadAttention
 
 supported_rnns = {
@@ -36,17 +36,17 @@ class DecoderRNN(nn.Module):
           drawn uniformly from 0-1 for every decoding token, and if the sample is smaller than the given value,
           teacher forcing would be used (default is 0).
 
-    Returns: y_hats, logits
-        - **y_hats** (batch, seq_len): predicted y values (y_hat) by the model
+    Returns: hypothesis, logits
+        - **hypothesis** (batch, seq_len): predicted y values (y_hat) by the model
         - **logits** (batch, seq_len, class_num): predicted log probability by the model
 
     Examples::
 
         >>> decoder = DecoderRNN(n_class, max_len, hidden_dim, sos_id, eos_id, n_layers)
-        >>> y_hats, logits = decoder(inputs, encoder_outputs, teacher_forcing_ratio=0.90)
+        >>> hypothesis, logits = decoder(inputs, encoder_outputs, teacher_forcing_ratio=0.90)
     """
 
-    def __init__(self, n_class, max_len, hidden_dim, sos_id, eos_id, n_layers=1,
+    def __init__(self, n_class, max_len, hidden_dim, sos_id, eos_id, pad_id, n_layers=1,
                  rnn_type='gru', dropout_p=0.5, device=None, use_beam_search=False, k=5):
 
         super(DecoderRNN, self).__init__()
@@ -58,6 +58,7 @@ class DecoderRNN(nn.Module):
         self.max_length = max_len
         self.eos_id = eos_id
         self.sos_id = sos_id
+        self.pad_id = pad_id
         self.n_layers = n_layers
         self.hidden_dim = hidden_dim
         self.device = device
@@ -68,12 +69,12 @@ class DecoderRNN(nn.Module):
         self.fc = nn.Linear(self.hidden_dim, self.output_size)
         self.attention = MultiHeadAttention(in_features=hidden_dim, dim=128, n_head=4)
 
-    def forward_step(self, input_, h_state, encoder_outputs=None):
-        batch_size = input_.size(0)
-        seq_length = input_.size(1)
-
-        embedded = self.embedding(input_).to(self.device)
+    def forward_step(self, input_var, h_state, encoder_outputs=None):
+        embedded = self.embedding(input_var).to(self.device)
         embedded = self.input_dropout(embedded)
+
+        if len(embedded.size()) == 2:  # if beam search
+            embedded = embedded.unsqueeze(1)
 
         if self.training:
             self.rnn.flatten_parameters()
@@ -82,64 +83,46 @@ class DecoderRNN(nn.Module):
         context = self.attention(output, encoder_outputs)
 
         predicted_softmax = F.log_softmax(self.fc(context.contiguous().view(-1, self.hidden_dim)), dim=1)
-        predicted_softmax = predicted_softmax.view(batch_size, seq_length, -1)
-
         return predicted_softmax, h_state
 
     def forward(self, inputs, encoder_outputs, teacher_forcing_ratio=0.90, use_beam_search=False):
-        batch_size = inputs.size(0)
-        max_length = inputs.size(1) - 1  # minus the start of sequence symbol
+        hypothesis, logits = None, None
+
+        inputs, batch_size, max_length = self._validate_args(inputs, encoder_outputs)
+        h_state = self.init_state(batch_size)
 
         decode_results = list()
         use_teacher_forcing = True if random.random() < teacher_forcing_ratio else False
 
-        h_state = self._init_state(batch_size)
-
         if use_beam_search:
-            logits = None
-            inputs = inputs[:, 0].unsqueeze(1)
-
-            beam = Beam(
-                k=self.k,
-                decoder=self,
-                batch_size=batch_size,
-                max_len=max_length,
-                device=self.device
-            )
-            y_hats = beam.search(inputs, encoder_outputs)
+            search = BeamSearch(self, batch_size)
+            hypothesis = search(inputs, encoder_outputs, k=self.k)
 
         else:
             if use_teacher_forcing:  # if teacher_forcing, Infer all at once
                 inputs = inputs[inputs != self.eos_id].view(batch_size, -1)
-                predicted_softmax, h_state = self.forward_step(
-                    input_=inputs,
-                    h_state=h_state,
-                    encoder_outputs=encoder_outputs
-                )
+                predicted_softmax, h_state = self.forward_step(inputs, h_state, encoder_outputs)
+                predicted_softmax = predicted_softmax.view(batch_size, inputs.size(1), -1)
 
                 for di in range(predicted_softmax.size(1)):
                     step_output = predicted_softmax[:, di, :]
                     decode_results.append(step_output)
 
             else:
-                input_ = inputs[:, 0].unsqueeze(1)
+                input_var = inputs[:, 0].unsqueeze(1)
 
                 for di in range(max_length):
-                    predicted_softmax, h_state = self.forward_step(
-                        input_=input_,
-                        h_state=h_state,
-                        encoder_outputs=encoder_outputs
-                    )
-                    step_output = predicted_softmax.squeeze(1)
+                    predicted_softmax, h_state = self.forward_step(input_var, h_state, encoder_outputs)
+                    step_output = predicted_softmax.view(batch_size, 1, -1).squeeze(1)
                     decode_results.append(step_output)
-                    input_ = decode_results[-1].topk(1)[1]
+                    input_var = decode_results[-1].topk(1)[1]
 
             logits = torch.stack(decode_results, dim=1).to(self.device)
-            y_hats = logits.max(-1)[1]
+            hypothesis = logits.max(-1)[1]
 
-        return y_hats, logits
+        return hypothesis, logits
 
-    def _init_state(self, batch_size):
+    def init_state(self, batch_size):
         if isinstance(self.rnn, nn.LSTM):
             h_0 = torch.zeros(self.n_layers, batch_size, self.hidden_dim).to(self.device)
             c_0 = torch.zeros(self.n_layers, batch_size, self.hidden_dim).to(self.device)
@@ -149,3 +132,16 @@ class DecoderRNN(nn.Module):
             h_state = torch.zeros(self.n_layers, batch_size, self.hidden_dim).to(self.device)
 
         return h_state
+
+    def _validate_args(self, inputs, encoder_outputs):
+        batch_size = encoder_outputs.size(0)
+
+        if inputs is None:
+            inputs = torch.empty(batch_size, 1).type(torch.long)
+            inputs[:, 0] = self.sos_id
+            max_length = self.max_length
+
+        else:
+            max_length = inputs.size(1) - 1  # minus the start of sequence symbol
+
+        return inputs, batch_size, max_length

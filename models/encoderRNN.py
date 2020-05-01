@@ -43,7 +43,6 @@ class EncoderRNN(nn.Module):
             input_size=hidden_size,
             hidden_size=hidden_size,
             num_layers=n_layers,
-            bias=True,
             batch_first=True,
             bidirectional=bidirectional,
             dropout=dropout_p
