@@ -1,4 +1,4 @@
-# Pytorch Sequence-to-Sequence
+# pytorch-seq2seq
   
 ### Seq2seq Architecture in Pytorch  
 [<img src="https://github.com/gentaiscool/end2end-asr-pytorch/raw/master/img/pytorch-logo-dark.png" height=18>](https://pytorch.org/) <img src="https://img.shields.io/badge/License-Apache--2.0-yellow" height=20>
