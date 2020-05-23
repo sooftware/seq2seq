@@ -80,9 +80,12 @@ I follow [PEP-8](https://www.python.org/dev/peps/pep-0008/) for code style. Espe
   
 ## Citing
 ```
-@source_code{
+@github{
   title={pytorch-seq2seq},
   author={Soohwan Kim},
+  publisher={github},
+  docs={https://sooftware.github.io/pytorch-seq2seq/},
+  url={https://github.com/sooftware/pytorch-seq2seq},
   year={2020}
 }
 ```
