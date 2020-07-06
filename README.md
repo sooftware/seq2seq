@@ -7,8 +7,8 @@
   
 ## Intro
   
-`pytorch-seq2seq` is a framework for attention based sequence-to-sequence (seq2seq) models implemented in [Pytorch](https://pytorch.org/).  
-We appreciate any kind of feedback or contribution.  
+`pytorch-seq2seq` is a framework for attention based sequence-to-sequence models implemented in [Pytorch](https://pytorch.org/).  
+I appreciate any kind of feedback or contribution.  
    
 ![image](https://user-images.githubusercontent.com/42150335/80314394-59844280-882c-11ea-924b-a3d714c78324.png)
   
