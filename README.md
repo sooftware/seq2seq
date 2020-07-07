@@ -1,14 +1,14 @@
-# Pytorch Sequence-to-Sequence
+# Seq2seq-pytorch
   
-### Seq2seq Architecture in Pytorch  
+### Sequence to Sequence Architecture in Pytorch  
 [<img src="https://github.com/gentaiscool/end2end-asr-pytorch/raw/master/img/pytorch-logo-dark.png" height=18>](https://pytorch.org/) <img src="https://img.shields.io/badge/License-Apache--2.0-yellow" height=20>
   
 ### [**Documentation**](https://sooftware.github.io/pytorch-seq2seq/)
   
 ## Intro
   
-This is a framework for Attention based Sequence-to-Sequence (seq2seq) models implemented in [Pytorch](https://pytorch.org/).  
-We appreciate any kind of feedback or contribution.  
+`pytorch-seq2seq` is a framework for attention based sequence-to-sequence models implemented in [Pytorch](https://pytorch.org/).  
+I appreciate any kind of feedback or contribution.  
    
 ![image](https://user-images.githubusercontent.com/42150335/80314394-59844280-882c-11ea-924b-a3d714c78324.png)
   
@@ -80,9 +80,12 @@ I follow [PEP-8](https://www.python.org/dev/peps/pep-0008/) for code style. Espe
   
 ## Citing
 ```
-@source_code{
+@github{
   title={pytorch-seq2seq},
   author={Soohwan Kim},
+  publisher={github},
+  docs={https://sooftware.github.io/pytorch-seq2seq/},
+  url={https://github.com/sooftware/pytorch-seq2seq},
   year={2020}
 }
 ```
