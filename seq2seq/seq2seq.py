@@ -1,3 +1,4 @@
+import torch
 import torch.nn as nn
 
 
@@ -19,34 +20,23 @@ class Seq2seq(nn.Module):
           teacher forcing would be used (default is 0.90)
         - **use_beam_search** (bool): flag indication whether to use beam-search or not (default: false)
 
-    Returns: y_hats, logits
-        - **y_hats** (batch, seq_len): predicted y values (y_hat) by the model
-        - **logits** (batch, seq_len, vocab_size): logit values by the model
-
-    Examples::
-        >>> encoder = EncoderRNN(input_size, ...)
-        >>> decoder = DecoderRNN(class_num, ...)
-        >>> model = Seq2seq(encoder, decoder)
-        >>> y_hats, logits = model()
+    Returns: output, ret_dict
+        - **output** (seq_len, batch, num_classes): list of tensors containing the outputs of the decoding function.
+        - **ret_dict**: dictionary containing additional information as follows {*KEY_ATTENTION_SCORE* : list of scores
+          representing encoder outputs, *KEY_SEQUENCE_SYMBOL* : list of sequences, where each sequence is a list of
+          predicted token IDs }.
     """
-    def __init__(self, encoder, decoder):
+    def __init__(self, encoder: torch.nn.Module, decoder: torch.nn.Module):
         super(Seq2seq, self).__init__()
         self.encoder = encoder
         self.decoder = decoder
 
-    def forward(self, inputs, targets, input_lengths, teacher_forcing_ratio=0.90, use_beam_search=False):
-        encoder_outputs, encoder_hidden = self.encoder(inputs, input_lengths)
-        y_hats, logits = self.decoder(
-            inputs=targets,
-            encoder_outputs=encoder_outputs,
-            teacher_forcing_ratio=teacher_forcing_ratio,
-            use_beam_search=use_beam_search
-        )
+    def forward(self, inputs: torch.Tensor, targets: torch.Tensor,
+                input_lengths: torch.Tensor, teacher_forcing_ratio: float = 0.90):
+        encoder_outputs = self.encoder(inputs, input_lengths)
+        output, ret_dict = self.decoder(targets, encoder_outputs, teacher_forcing_ratio)
 
-        return y_hats, logits
-
-    def set_beam_size(self, k):
-        self.speller.k = k
+        return output, ret_dict
 
     def flatten_parameters(self):
         self.encoder.flatten_parameters()
