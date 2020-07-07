@@ -6,7 +6,7 @@
 ### [**Documentation**](https://sooftware.github.io/pytorch-seq2seq/)
   
 `Seq2seq-pytorch` is a framework for attention based sequence-to-sequence models implemented in [Pytorch](https://pytorch.org/).  
-The framework has modularized and extensible components for seq2seq models, training and inference, checkpoints, etc.  
+The framework has modularized and extensible components for seq2seq models, training, inference, checkpoints, etc.  
   
 ## Intro
 Seq2seq turns one sequence into another sequence. It does so by use of a recurrent neural network (RNN) or more often LSTM or GRU to avoid the problem of vanishing gradient. The context for each item is the output from the previous step. The primary components are one encoder and one decoder network. The encoder turns each item into a corresponding hidden vector containing the item and its context. The decoder reverses the process, turning the vector into an output item, using the previous output as the input context.
