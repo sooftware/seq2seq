@@ -3,7 +3,7 @@
 ### Sequence to Sequence Architecture in Pytorch  
 [<img src="https://github.com/gentaiscool/end2end-asr-pytorch/raw/master/img/pytorch-logo-dark.png" height=18>](https://pytorch.org/) <img src="https://img.shields.io/badge/License-Apache--2.0-yellow" height=20>
   
-### [**Documentation**](https://sooftware.github.io/pytorch-seq2seq/)
+### [**Documentation**](https://sooftware.github.io/Seq2seq-pytorch/)
   
 `Seq2seq-pytorch` is a framework for attention based sequence-to-sequence models implemented in [Pytorch](https://pytorch.org/).  
 The framework has modularized and extensible components for seq2seq models, training, inference, checkpoints, etc.  
@@ -34,18 +34,21 @@ I appreciate any kind of feedback or contribution.  Feel free to proceed with sm
 I follow [PEP-8](https://www.python.org/dev/peps/pep-0008/) for code style. Especially the style of docstrings is important to generate documentation.  
   
 ## Reference
-[[1]   IBM pytorch-seq2seq](https://github.com/IBM/pytorch-seq2seq)   
-[[2]   Pytorch-End-to-End-Korean-Speech-Recognition](https://github.com/sooftware/End-to-End-Korean-Speech-Recognition)      
-[[3]   RNN Language Model](https://github.com/sooftware/char-rnnlm)      
   
+[[1]   IBM pytorch-seq2seq](https://github.com/IBM/pytorch-seq2seq)       
+  
+[[2]   Sequence to Sequence Learning with Neural Networks](https://arxiv.org/abs/1409.3215)  
+  
+[[3]   Neural Machine Translation by Jointly Learning to Align and Translate](https://arxiv.org/abs/1409.0473)  
+   
 ## Citing
 ```
 @github{
-  title={pytorch-seq2seq},
+  title={Seq2seq-pytorch},
   author={Soohwan Kim},
   publisher={github},
-  docs={https://sooftware.github.io/pytorch-seq2seq/},
-  url={https://github.com/sooftware/pytorch-seq2seq},
+  docs={https://sooftware.github.ioSeq2seq-pytorch/},
+  url={https://github.com/sooftware/Seq2seq-pytorch},
   year={2020}
 }
 ```
