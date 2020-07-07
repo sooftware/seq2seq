@@ -5,58 +5,18 @@
   
 ### [**Documentation**](https://sooftware.github.io/pytorch-seq2seq/)
   
+`Seq2seq-pytorch` is a framework for attention based sequence-to-sequence models implemented in [Pytorch](https://pytorch.org/).  
+The framework has modularized and extensible components for seq2seq models, training and inference, checkpoints, etc.  
+  
 ## Intro
-  
-`pytorch-seq2seq` is a framework for attention based sequence-to-sequence models implemented in [Pytorch](https://pytorch.org/).  
-I appreciate any kind of feedback or contribution.  
+Seq2seq turns one sequence into another sequence. It does so by use of a recurrent neural network (RNN) or more often LSTM or GRU to avoid the problem of vanishing gradient. The context for each item is the output from the previous step. The primary components are one encoder and one decoder network. The encoder turns each item into a corresponding hidden vector containing the item and its context. The decoder reverses the process, turning the vector into an output item, using the previous output as the input context.
    
-![image](https://user-images.githubusercontent.com/42150335/80314394-59844280-882c-11ea-924b-a3d714c78324.png)
+<img src="https://cdn-images-1.medium.com/max/1000/1*QWVZX2bVBK5tHOgDJK38aA.png" width=800>
   
-## How To Use  
-  
-### Training
 
-```python
-from models.encoderRNN import EncoderRNN
-from models.decoderRNN import DecoderRNN
-from models.seq2seq import Seq2seq
-
-encoder = EncoderRNN(
-    in_features = in_features, 
-    hidden_dim = config.hidden_dim, 
-    dropout_p = config.dropout_p, 
-    n_layers = config.encoder_layer_size, 
-    bidirectional = bidirectional, 
-    rnn_type = 'gru'
-)
-decoder = DecoderRNN(
-    n_class = n_class, 
-    max_length = config.max_len, 
-    hidden_dim = config.hidden_dim if bidirectional else config.hidden_dim << 1,
-    sos_id = SOS_token, 
-    eos_id = EOS_token,
-    n_layers = config.decoder_layer_size, 
-    rnn_type = 'gru', 
-    dropout_p = config.dropout_p,
-    device = device, 
-    use_beam_search = False, 
-    k = 8
- )
- model = Seq2seq(encoder, decoder)
-
- y_hats, logits = model(inputs, targets, teacher_forcing_ratio=teacher_forcing_ratio)
-```
-  
-### Performance Test
-```python
-model = torch.load('weight_path')
-model.set_beam_size(k=5)
-
-y_hat, _ = model(inputs, targets, teacher_forcing_ratio=0.0, use_beam_search=True)
-```
 
 ## Installation
-This project recommends Python 3.7 or higher.   
+This project recommends Python 3.6 or higher.   
 I recommend creating a new virtual environment for this project (using virtualenv or conda).  
 
 ### Prerequisites
