@@ -2,23 +2,28 @@ import random
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torch import Tensor, LongTensor
+from typing import Optional, Any, Tuple
 from seq2seq.attention import MultiHeadAttention
+from seq2seq.modules import Linear
+from seq2seq.sublayers import AddNorm, BaseRNN, FeedForwardNet
 
 
-class Seq2seqDecoder(nn.Module):
-    r"""
-    Converts higher level features (from encoder) into output sequence.
+class Seq2seqDecoder(BaseRNN):
+    """
+    Converts higher level features (from listener) into output utterances
+    by specifying a probability distribution over sequences of characters.
 
     Args:
-        num_classes (int): the number of class
+        num_classes (int): the number of classfication
         max_length (int): a maximum allowed length for the sequence to be processed
         hidden_dim (int): the number of features in the hidden state `h`
         sos_id (int): index of the start of sentence symbol
         eos_id (int): index of the end of sentence symbol
         num_layers (int, optional): number of recurrent layers (default: 1)
         rnn_type (str, optional): type of RNN cell (default: gru)
-        dropout_p (float, optional): dropout probability for the output sequence (default: 0)
-        k (int) : size of beam
+        dropout_p (float, optional): dropout probability (default: 0)
+        device (torch.device): device - 'cuda' or 'cpu'
 
     Inputs: inputs, encoder_outputs, teacher_forcing_ratio
         - **inputs** (batch, seq_len, input_size): list of sequences, whose length is the batch size and within which
@@ -39,9 +44,10 @@ class Seq2seqDecoder(nn.Module):
     KEY_ATTENTION_SCORE = 'attention_score'
     KEY_SEQUENCE_SYMBOL = 'sequence_symbol'
 
-    def __init__(self, num_classes: int, max_length: int, hidden_dim: int = 512, num_heads: int = 8,
+    def __init__(self, num_classes: int, max_length: int = 120, hidden_dim: int = 1024, d_ff: int = 2048,
                  sos_id: int = 1, eos_id: int = 2,
-                 num_layers=2, rnn_type='lstm', dropout_p=0.5, device=None):
+                 num_heads: int = 4, num_layers: int = 2, rnn_type: str = 'lstm',
+                 dropout_p: float = 0.3, device: str = 'cuda') -> None:
         super(Seq2seqDecoder, self).__init__(hidden_dim, hidden_dim, num_layers, rnn_type, dropout_p, False, device)
         self.num_classes = num_classes
         self.num_heads = num_heads
@@ -50,11 +56,12 @@ class Seq2seqDecoder(nn.Module):
         self.sos_id = sos_id
         self.embedding = nn.Embedding(num_classes, hidden_dim)
         self.input_dropout = nn.Dropout(dropout_p)
-        self.fc1 = nn.Linear(hidden_dim << 1, hidden_dim, bias=True)
-        self.fc2 = nn.Linear(hidden_dim, num_classes, bias=True)
-        self.attention = MultiHeadAttention(hidden_dim, num_heads)
+        self.attention = AddNorm(MultiHeadAttention(hidden_dim, num_heads), hidden_dim)
+        self.feed_forward = AddNorm(FeedForwardNet(hidden_dim, d_ff, dropout_p), hidden_dim)
+        self.generator = Linear(hidden_dim, num_classes, bias=True)
 
-    def forward_step(self, input_var, hidden, encoder_outputs, attn):
+    def forward_step(self, input_var: Tensor, hidden: Optional[Any],
+                     encoder_outputs: Tensor) -> Tuple[Tensor, Optional[Any], Tensor]:
         batch_size, output_lengths = input_var.size(0), input_var.size(1)
 
         embedded = self.embedding(input_var).to(self.device)
@@ -64,19 +71,18 @@ class Seq2seqDecoder(nn.Module):
             self.rnn.flatten_parameters()
 
         output, hidden = self.rnn(embedded, hidden)
-        context = self.attention(output, encoder_outputs)
+        context, attn = self.attention(output, encoder_outputs, encoder_outputs)
 
-        output = self.fc1(context.view(-1, self.hidden_dim << 1)).view(batch_size, -1, self.hidden_dim)
-        output = self.fc2(torch.tanh(output).contiguous().view(-1, self.hidden_dim))
+        output = self.feed_forward(context.view(-1, self.hidden_dim)).view(batch_size, -1, self.hidden_dim)
+        output = self.generator(output.contiguous().view(-1, self.hidden_dim))
 
-        predicted_softmax = F.log_softmax(output, dim=1)
-        step_output = predicted_softmax.view(batch_size, output_lengths, -1).squeeze(1)
+        step_output = F.log_softmax(output, dim=1)
+        step_output = step_output.view(batch_size, output_lengths, -1).squeeze(1)
 
         return step_output, hidden, attn
 
-    def forward(self, inputs: torch.Tensor, encoder_outputs: torch.Tensor, teacher_forcing_ratio: float = 1.0):
-        hidden, attn = None, None
-        decoder_outputs, ret_dict = list(), dict()
+    def forward(self, inputs: Tensor, encoder_outputs: Tensor, teacher_forcing_ratio: float = 1.0) -> Tuple[Tensor, dict]:
+        decoder_outputs, ret_dict, hidden = list(), dict(), None
 
         if not self.training:
             ret_dict[Seq2seqDecoder.KEY_ATTENTION_SCORE] = list()
@@ -87,7 +93,7 @@ class Seq2seqDecoder(nn.Module):
 
         if use_teacher_forcing:
             inputs = inputs[inputs != self.eos_id].view(batch_size, -1)
-            step_outputs, hidden, attn = self.forward_step(inputs, hidden, encoder_outputs, attn)
+            step_outputs, hidden, attn = self.forward_step(inputs, hidden, encoder_outputs)
 
             for di in range(step_outputs.size(1)):
                 step_output = step_outputs[:, di, :]
@@ -97,7 +103,7 @@ class Seq2seqDecoder(nn.Module):
             input_var = inputs[:, 0].unsqueeze(1)
 
             for di in range(max_length):
-                step_output, hidden, attn = self.forward_step(input_var, hidden, encoder_outputs, attn)
+                step_output, hidden, attn = self.forward_step(input_var, hidden, encoder_outputs)
 
                 if not self.training:
                     ret_dict[Seq2seqDecoder.KEY_ATTENTION_SCORE].append(attn)
@@ -108,12 +114,13 @@ class Seq2seqDecoder(nn.Module):
 
         return decoder_outputs, ret_dict
 
-    def validate_args(self, inputs, encoder_outputs, teacher_forcing_ratio):
+    def validate_args(self, inputs: Optional[Any], encoder_outputs: Tensor,
+                      teacher_forcing_ratio: float) -> Tuple[Tensor, int, int]:
         """ Validate arguments """
         batch_size = encoder_outputs.size(0)
 
         if inputs is None:  # inference
-            inputs = torch.LongTensor([self.sos_id] * batch_size).view(batch_size, 1)
+            inputs = LongTensor([self.sos_id] * batch_size).view(batch_size, 1)
             max_length = self.max_length
 
             if torch.cuda.is_available():

@@ -1,6 +1,7 @@
-import torch
 import torch.nn as nn
-from seq2seq.base_rnn import BaseRNN
+from torch import Tensor
+from typing import Tuple
+from seq2seq.sublayers import BaseRNN
 
 
 class Seq2seqEncoder(BaseRNN):
@@ -22,6 +23,7 @@ class Seq2seqEncoder(BaseRNN):
         - **output** (batch, seq_len, hidden_size): tensor containing the encoded features of the input sequence
         - **hidden** (num_layers * num_directions, batch, hidden_size): tensor containing the features in the hidden
     """
+
     def __init__(self, input_size: int, hidden_dim: int = 256,
                  dropout_p: float = 0.5, num_layers: int = 3,
                  bidirectional: bool = True, rnn_type: str = 'lstm'):
@@ -29,7 +31,7 @@ class Seq2seqEncoder(BaseRNN):
         self.embedding = nn.Embedding(input_size, hidden_dim)
         self.input_dropout = nn.Dropout(dropout_p)
 
-    def forward(self, inputs: torch.Tensor, input_lengths: torch.Tensor):
+    def forward(self, inputs: Tensor, input_lengths: Tensor) -> Tuple[Tensor, Tensor]:
         embedded = self.embedding(inputs)
         embedded = self.input_dropout(embedded)
 
