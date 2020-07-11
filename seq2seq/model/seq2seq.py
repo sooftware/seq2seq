@@ -36,7 +36,7 @@ class Seq2seq(nn.Module):
 
     def forward(self, inputs: Tensor, input_lengths: Tensor, targets: Optional[Tensor] = None,
                 teacher_forcing_ratio: float = 1.0) -> Tuple[Tensor, dict]:
-        encoder_outputs = self.encoder(inputs, input_lengths)
+        encoder_outputs, hidden = self.encoder(inputs, input_lengths)
         result = self.decoder(targets, encoder_outputs, teacher_forcing_ratio)
         return result
 

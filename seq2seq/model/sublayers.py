@@ -1,6 +1,6 @@
 import torch.nn as nn
 from torch import Tensor
-from seq2seq.modules import LayerNorm, Linear
+from seq2seq.model.modules import LayerNorm, Linear
 
 
 class BaseRNN(nn.Module):
@@ -74,4 +74,4 @@ class FeedForwardNet(nn.Module):
         )
 
     def forward(self, inputs: Tensor) -> Tensor:
-        return self.feed_ward(inputs)
+        return self.feed_forward(inputs)

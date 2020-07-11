@@ -4,9 +4,9 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch import Tensor, LongTensor
 from typing import Optional, Any, Tuple
-from seq2seq.attention import MultiHeadAttention
-from seq2seq.modules import Linear
-from seq2seq.sublayers import AddNorm, BaseRNN, FeedForwardNet
+from seq2seq.model.attention import MultiHeadAttention
+from seq2seq.model.modules import Linear
+from seq2seq.model.sublayers import AddNorm, BaseRNN, FeedForwardNet
 
 
 class Seq2seqDecoder(BaseRNN):

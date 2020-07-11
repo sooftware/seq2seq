@@ -1,7 +1,7 @@
 import torch.nn as nn
 from torch import Tensor
 from typing import Tuple
-from seq2seq.sublayers import BaseRNN
+from seq2seq.model.sublayers import BaseRNN
 
 
 class Seq2seqEncoder(BaseRNN):
@@ -27,7 +27,7 @@ class Seq2seqEncoder(BaseRNN):
     def __init__(self, input_size: int, hidden_dim: int = 256,
                  dropout_p: float = 0.5, num_layers: int = 3,
                  bidirectional: bool = True, rnn_type: str = 'lstm'):
-        super(Seq2seqEncoder, self).__init__(input_size, hidden_dim, num_layers, rnn_type, dropout_p, bidirectional)
+        super(Seq2seqEncoder, self).__init__(hidden_dim, hidden_dim, num_layers, rnn_type, dropout_p, bidirectional)
         self.embedding = nn.Embedding(input_size, hidden_dim)
         self.input_dropout = nn.Dropout(dropout_p)
 
@@ -37,7 +37,6 @@ class Seq2seqEncoder(BaseRNN):
 
         embedded = nn.utils.rnn.pack_padded_sequence(embedded, input_lengths, batch_first=True)
         output, hidden = self.rnn(embedded)
-
         output, _ = nn.utils.rnn.pad_packed_sequence(output, batch_first=True)
 
         return output, hidden

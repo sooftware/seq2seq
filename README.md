@@ -25,6 +25,41 @@ I recommend creating a new virtual environment for this project (using virtualen
 * Numpy: `pip install numpy` (Refer [here](https://github.com/numpy/numpy) for problem installing Numpy).
 * PyTorch: Refer to [PyTorch website](http://pytorch.org/) to install the version w.r.t. your environment.
   
+## Get Started  
+  
+The toy problem is brought from [IBM/pytorch-seq2seq](https://github.com/IBM/pytorch-seq2seq).  
+  
+### Prepare toy dataset
+```
+$ ./generate_toy_data.sh
+```
+Run script to generate the reverse toy dataset.  
+The generated data is stored in data/toy_reverse by default.  
+  
+### Train and play
+```
+$ toy.sh
+```
+Start training by default setting. If you want to edit default setting, you can edit `toy.sh`.  
+Once training is complete, you will be prompted to enter a new sequence to translate and the model will print out its prediction (use ctrl-C to terminate). Try the example below!  
+```
+Input: 1 3 5 7 9
+Expected output: 9 7 5 3 1 EOS
+```
+### Checkpoints
+Checkpoints are organized by experiments and timestamps as shown in the following file structure
+```
+experiment_dir
++-- input_vocab
++-- output_vocab
++-- checkpoints
+|  +-- YYYY_mm_dd_HH_MM_SS
+   |  +-- decoder
+   |  +-- encoder
+   |  +-- model_checkpoint
+```
+The sample script by default saves checkpoints in the experiment folder of the root directory. Look at the usages of the sample code for more options, including resuming and loading from checkpoints.
+  
 ## Troubleshoots and Contributing
 If you have any questions, bug reports, and feature requests, please [open an issue](https://github.com/sh951011/PyTorch-Seq2seq/issues) on Github.  
 or Contacts sh951011@gmail.com please.

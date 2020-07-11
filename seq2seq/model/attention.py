@@ -4,7 +4,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch import Tensor
 from typing import Tuple
-from seq2seq.modules import Linear
+from seq2seq.model.modules import Linear
 
 
 class ScaledDotProductAttention(nn.Module):
