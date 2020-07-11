@@ -3,60 +3,20 @@
 ### Sequence to Sequence Architecture in Pytorch  
 [<img src="https://github.com/gentaiscool/end2end-asr-pytorch/raw/master/img/pytorch-logo-dark.png" height=18>](https://pytorch.org/) <img src="https://img.shields.io/badge/License-Apache--2.0-yellow" height=20>
   
-### [**Documentation**](https://sooftware.github.io/pytorch-seq2seq/)
+### [**Documentation**](https://sooftware.github.io/Seq2seq-pytorch/)
+  
+`Seq2seq-pytorch` is a framework for attention based sequence-to-sequence models implemented in [Pytorch](https://pytorch.org/).  
+The framework has modularized and extensible components for seq2seq models, training, inference, checkpoints, etc.  
   
 ## Intro
-  
-`pytorch-seq2seq` is a framework for attention based sequence-to-sequence models implemented in [Pytorch](https://pytorch.org/).  
-I appreciate any kind of feedback or contribution.  
+Seq2seq turns one sequence into another sequence. It does so by use of a recurrent neural network (RNN) or more often LSTM or GRU to avoid the problem of vanishing gradient. The context for each item is the output from the previous step. The primary components are one encoder and one decoder network. The encoder turns each item into a corresponding hidden vector containing the item and its context. The decoder reverses the process, turning the vector into an output item, using the previous output as the input context.
    
-![image](https://user-images.githubusercontent.com/42150335/80314394-59844280-882c-11ea-924b-a3d714c78324.png)
+<img src="https://cdn-images-1.medium.com/max/1000/1*QWVZX2bVBK5tHOgDJK38aA.png" width=800>
   
-## How To Use  
-  
-### Training
 
-```python
-from models.encoderRNN import EncoderRNN
-from models.decoderRNN import DecoderRNN
-from models.seq2seq import Seq2seq
-
-encoder = EncoderRNN(
-    in_features = in_features, 
-    hidden_dim = config.hidden_dim, 
-    dropout_p = config.dropout_p, 
-    n_layers = config.encoder_layer_size, 
-    bidirectional = bidirectional, 
-    rnn_type = 'gru'
-)
-decoder = DecoderRNN(
-    n_class = n_class, 
-    max_length = config.max_len, 
-    hidden_dim = config.hidden_dim if bidirectional else config.hidden_dim << 1,
-    sos_id = SOS_token, 
-    eos_id = EOS_token,
-    n_layers = config.decoder_layer_size, 
-    rnn_type = 'gru', 
-    dropout_p = config.dropout_p,
-    device = device, 
-    use_beam_search = False, 
-    k = 8
- )
- model = Seq2seq(encoder, decoder)
-
- y_hats, logits = model(inputs, targets, teacher_forcing_ratio=teacher_forcing_ratio)
-```
-  
-### Performance Test
-```python
-model = torch.load('weight_path')
-model.set_beam_size(k=5)
-
-y_hat, _ = model(inputs, targets, teacher_forcing_ratio=0.0, use_beam_search=True)
-```
 
 ## Installation
-This project recommends Python 3.7 or higher.   
+This project recommends Python 3.6 or higher.   
 I recommend creating a new virtual environment for this project (using virtualenv or conda).  
 
 ### Prerequisites
@@ -74,18 +34,21 @@ I appreciate any kind of feedback or contribution.  Feel free to proceed with sm
 I follow [PEP-8](https://www.python.org/dev/peps/pep-0008/) for code style. Especially the style of docstrings is important to generate documentation.  
   
 ## Reference
-[[1]   IBM pytorch-seq2seq](https://github.com/IBM/pytorch-seq2seq)   
-[[2]   Pytorch-End-to-End-Korean-Speech-Recognition](https://github.com/sooftware/End-to-End-Korean-Speech-Recognition)      
-[[3]   RNN Language Model](https://github.com/sooftware/char-rnnlm)      
   
+[[1]   IBM pytorch-seq2seq](https://github.com/IBM/pytorch-seq2seq)       
+  
+[[2]   Sequence to Sequence Learning with Neural Networks](https://arxiv.org/abs/1409.3215)  
+  
+[[3]   Neural Machine Translation by Jointly Learning to Align and Translate](https://arxiv.org/abs/1409.0473)  
+   
 ## Citing
 ```
 @github{
-  title={pytorch-seq2seq},
+  title={Seq2seq-pytorch},
   author={Soohwan Kim},
   publisher={github},
-  docs={https://sooftware.github.io/pytorch-seq2seq/},
-  url={https://github.com/sooftware/pytorch-seq2seq},
+  docs={https://sooftware.github.ioSeq2seq-pytorch/},
+  url={https://github.com/sooftware/Seq2seq-pytorch},
   year={2020}
 }
 ```
