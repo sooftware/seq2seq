@@ -144,4 +144,4 @@ if __name__ == '__main__':
     while True:
         seq_str = input("Type in a source sequence:")
         seq = seq_str.strip().split()
-        print(predictor.predict(seq, tgt.sos_id))
+        print(predictor.predict(seq))

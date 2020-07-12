@@ -1,12 +1,8 @@
 import logging
 import os
 import random
-import time
-
 import torch
 import torchtext
-import seq2seq
-from torch import optim
 from seq2seq.loss.loss import NLLLoss
 from seq2seq.checkpoint.checkpoint import Checkpoint
 
