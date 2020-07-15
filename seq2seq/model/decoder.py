@@ -7,7 +7,7 @@ from torch import Tensor, LongTensor
 from typing import Optional, Any, Tuple
 from seq2seq.model.attention import MultiHeadAttention
 from seq2seq.model.modules import Linear
-from seq2seq.model.sublayers import AddNorm, BaseRNN, FeedForwardNet
+from seq2seq.model.sublayers import AddNorm, BaseRNN
 
 
 class Seq2seqDecoder(BaseRNN):
