@@ -38,7 +38,7 @@ The generated data is stored in data/toy_reverse by default.
   
 ### Train and play
 ```
-$ toy.sh
+$ ./toy.sh
 ```
 Start training by default setting. If you want to edit default setting, you can edit `toy.sh`.  
 Once training is complete, you will be prompted to enter a new sequence to translate and the model will print out its prediction (use ctrl-C to terminate). Try the example below!  
@@ -76,6 +76,8 @@ I follow [PEP-8](https://www.python.org/dev/peps/pep-0008/) for code style. Espe
 [[2]   Sequence to Sequence Learning with Neural Networks](https://arxiv.org/abs/1409.3215)  
   
 [[3]   Neural Machine Translation by Jointly Learning to Align and Translate](https://arxiv.org/abs/1409.0473)  
+
+[[4]   Attention Is All You Need](https://arxiv.org/abs/1706.03762)
    
 ## Citing
 ```
