@@ -44,9 +44,6 @@ if __name__ == '__main__':
     parser.add_argument('--num_heads', type=int,
                         default=4,
                         help='number of attention heads')
-    parser.add_argument('--d_ff', type=int,
-                        default=512,
-                        help='dimension of position-wise feed forward network')
     parser.add_argument('--num_encoder_layers', type=int,
                         default=3,
                         help='number of encoder layers')
@@ -121,7 +118,7 @@ if __name__ == '__main__':
                                      dropout_p=opt.dropout_p, num_layers=opt.num_encoder_layers,
                                      bidirectional=True, rnn_type=opt.rnn_type)
             decoder = Seq2seqDecoder(len(tgt.vocab), 50, opt.hidden_dim << 1,
-                                     opt.d_ff, sos_id=tgt.sos_id, eos_id=tgt.eos_id,
+                                     sos_id=tgt.sos_id, eos_id=tgt.eos_id,
                                      num_heads=opt.num_heads, num_layers=opt.num_decoder_layers, rnn_type=opt.rnn_type,
                                      dropout_p=opt.dropout_p, device='cpu')
             model = Seq2seq(encoder, decoder)
@@ -137,7 +134,7 @@ if __name__ == '__main__':
                               checkpoint_every=5000,
                               print_every=10, expt_dir=opt.expt_dir)
 
-        model = t.train(model, train, num_epochs=6, dev_data=dev, optimizer=optimizer, resume=opt.resume)
+        model = t.train(model, train, num_epochs=1, dev_data=dev, optimizer=optimizer, resume=opt.resume)
 
     predictor = Predictor(model, input_vocab, output_vocab)
 

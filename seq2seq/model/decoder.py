@@ -46,7 +46,7 @@ class Seq2seqDecoder(BaseRNN):
     KEY_LENGTH = 'length'
     KEY_SEQUENCE_SYMBOL = 'sequence_symbol'
 
-    def __init__(self, num_classes: int, max_length: int = 120, hidden_dim: int = 1024, d_ff: int = 2048,
+    def __init__(self, num_classes: int, max_length: int = 120, hidden_dim: int = 1024,
                  sos_id: int = 1, eos_id: int = 2,
                  num_heads: int = 4, num_layers: int = 2, rnn_type: str = 'lstm',
                  dropout_p: float = 0.3, device: str = 'cuda') -> None:
@@ -59,8 +59,8 @@ class Seq2seqDecoder(BaseRNN):
         self.embedding = nn.Embedding(num_classes, hidden_dim)
         self.input_dropout = nn.Dropout(dropout_p)
         self.attention = AddNorm(MultiHeadAttention(hidden_dim, num_heads), hidden_dim)
-        self.feed_forward = AddNorm(FeedForwardNet(hidden_dim, d_ff, dropout_p), hidden_dim)
-        self.generator = Linear(hidden_dim, num_classes, bias=True)
+        self.residual_linear = AddNorm(Linear(hidden_dim, hidden_dim, bias=True), hidden_dim)
+        self.generator = Linear(hidden_dim, num_classes, bias=False)
 
     def forward_step(self, input_var: Tensor, hidden: Optional[Any],
                      encoder_outputs: Tensor) -> Tuple[Tensor, Optional[Any], Tensor]:
@@ -75,8 +75,8 @@ class Seq2seqDecoder(BaseRNN):
         output, hidden = self.rnn(embedded, hidden)
         context, attn = self.attention(output, encoder_outputs, encoder_outputs)
 
-        output = self.feed_forward(context.view(-1, self.hidden_dim)).view(batch_size, -1, self.hidden_dim)
-        output = self.generator(output.contiguous().view(-1, self.hidden_dim))
+        output = self.residual_linear(context.view(-1, self.hidden_dim)).view(batch_size, -1, self.hidden_dim)
+        output = self.generator(torch.tanh(output).contiguous().view(-1, self.hidden_dim))
 
         step_output = F.log_softmax(output, dim=1)
         step_output = step_output.view(batch_size, output_lengths, -1).squeeze(1)
@@ -115,6 +115,7 @@ class Seq2seqDecoder(BaseRNN):
                     ret_dict[Seq2seqDecoder.KEY_ATTENTION_SCORE].append(attn)
                     ret_dict[Seq2seqDecoder.KEY_SEQUENCE_SYMBOL].append(input_var)
                     eos_batches = input_var.data.eq(self.eos_id)
+
                     if eos_batches.dim() > 0:
                         eos_batches = eos_batches.cpu().view(-1).numpy()
                         update_idx = ((lengths > di) & eos_batches) != 0

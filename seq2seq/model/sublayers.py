@@ -60,18 +60,3 @@ class AddNorm(nn.Module):
             return self.layer_norm(output[0] + residual), output[1]
         else:
             return self.layer_norm(output + residual)
-
-
-class FeedForwardNet(nn.Module):
-    def __init__(self, hidden_dim: int, d_ff: int, dropout_p: float) -> None:
-        super(FeedForwardNet, self).__init__()
-        self.feed_forward = nn.Sequential(
-            Linear(hidden_dim, d_ff, bias=True),
-            nn.Dropout(dropout_p),
-            nn.ReLU(),
-            Linear(d_ff, hidden_dim, bias=True),
-            nn.Dropout(dropout_p)
-        )
-
-    def forward(self, inputs: Tensor) -> Tensor:
-        return self.feed_forward(inputs)
