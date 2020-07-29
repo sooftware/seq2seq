@@ -5,7 +5,7 @@
   
 ### [**Documentation**](https://sooftware.github.io/Seq2seq-pytorch/)
   
-`Seq2seq-pytorch` is a framework for attention based sequence-to-sequence models implemented in [Pytorch](https://pytorch.org/).  
+`Awesome-seq2seq` is a framework for attention based sequence-to-sequence models implemented in [Pytorch](https://pytorch.org/).  
 The framework has modularized and extensible components for seq2seq models, training, inference, checkpoints, etc.  
   
 ## Intro
@@ -80,11 +80,11 @@ I follow [PEP-8](https://www.python.org/dev/peps/pep-0008/) for code style. Espe
 ## Citing
 ```
 @github{
-  title={Seq2seq-pytorch},
+  title={Awesome-seq2seq},
   author={Soohwan Kim},
   publisher={github},
-  docs={https://sooftware.github.ioSeq2seq-pytorch/},
-  url={https://github.com/sooftware/Seq2seq-pytorch},
+  docs={https://sooftware.github.io/Awesome-seq2seq/},
+  url={https://github.com/sooftware/Awesome-seq2seq},
   year={2020}
 }
 ```
