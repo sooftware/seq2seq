@@ -1,11 +1,11 @@
-# Awesome-seq2seq
+# Sequence-to-Sequence
   
 ### Sequence to Sequence Architecture in Pytorch  
 [<img src="https://github.com/gentaiscool/end2end-asr-pytorch/raw/master/img/pytorch-logo-dark.png" height=18>](https://pytorch.org/) <img src="https://img.shields.io/badge/License-Apache--2.0-yellow" height=20>
   
 ### [**Documentation**](https://sooftware.github.io/Seq2seq-pytorch/)
   
-`Awesome-seq2seq` is a framework for attention based sequence-to-sequence models implemented in [Pytorch](https://pytorch.org/).  
+`Sequence-to-Sequence` is a framework for attention based sequence-to-sequence models implemented in [Pytorch](https://pytorch.org/).  
 The framework has modularized and extensible components for seq2seq models, training, inference, checkpoints, etc.  
   
 ## Intro
@@ -77,14 +77,7 @@ I follow [PEP-8](https://www.python.org/dev/peps/pep-0008/) for code style. Espe
 
 [[4]   Attention Is All You Need](https://arxiv.org/abs/1706.03762)
    
-## Citing
-```
-@github{
-  title={Awesome-seq2seq},
-  author={Soohwan Kim},
-  publisher={github},
-  docs={https://sooftware.github.io/Awesome-seq2seq/},
-  url={https://github.com/sooftware/Awesome-seq2seq},
-  year={2020}
-}
-```
+## Author
+  
+* Soohwan Kim [@sooftware](https://github.com/sooftware)
+* Contacts: sh951011@gmail.com
