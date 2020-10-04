@@ -69,13 +69,10 @@ I follow [PEP-8](https://www.python.org/dev/peps/pep-0008/) for code style. Espe
   
 ## Reference
   
-[[1]   IBM pytorch-seq2seq](https://github.com/IBM/pytorch-seq2seq)       
-  
-[[2]   Sequence to Sequence Learning with Neural Networks](https://arxiv.org/abs/1409.3215)  
-  
-[[3]   Neural Machine Translation by Jointly Learning to Align and Translate](https://arxiv.org/abs/1409.0473)  
-
-[[4]   Attention Is All You Need](https://arxiv.org/abs/1706.03762)
+* [IBM pytorch-seq2seq](https://github.com/IBM/pytorch-seq2seq)       
+* [Sequence to Sequence Learning with Neural Networks](https://arxiv.org/abs/1409.3215)  
+* [Neural Machine Translation by Jointly Learning to Align and Translate](https://arxiv.org/abs/1409.0473)  
+* [Attention Is All You Need](https://arxiv.org/abs/1706.03762)
    
 ## Author
   
