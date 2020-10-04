@@ -10,7 +10,7 @@ The framework has modularized and extensible components for seq2seq models, trai
   
 ## Intro
   
-<img src="https://user-images.githubusercontent.com/42150335/87226235-6517ec00-c3cd-11ea-9c96-021f6b827a5e.png" width=400>
+<img src="https://incredible.ai/assets/images/seq2seq-seq2seq_ts.png" width=400>
   
 Seq2seq turns one sequence into another sequence. It does so by use of a recurrent neural network (RNN) or more often LSTM or GRU to avoid the problem of vanishing gradient. The context for each item is the output from the previous step. The primary components are one encoder and one decoder network. The encoder turns each item into a corresponding hidden vector containing the item and its context. The decoder reverses the process, turning the vector into an output item, using the previous output as the input context.
   
