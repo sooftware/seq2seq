@@ -24,9 +24,15 @@ class Seq2seqEncoder(BaseRNN):
         - **hidden** (num_layers * num_directions, batch, hidden_size): tensor containing the features in the hidden
     """
 
-    def __init__(self, input_size: int, hidden_dim: int = 256,
-                 dropout_p: float = 0.5, num_layers: int = 3,
-                 bidirectional: bool = True, rnn_type: str = 'lstm'):
+    def __init__(
+            self,
+            input_size: int,
+            hidden_dim: int = 256,
+            dropout_p: float = 0.5,
+            num_layers: int = 3,
+            bidirectional: bool = True,
+            rnn_type: str = 'lstm'
+    ) -> None:
         super(Seq2seqEncoder, self).__init__(hidden_dim, hidden_dim, num_layers, rnn_type, dropout_p, bidirectional)
         self.embedding = nn.Embedding(input_size, hidden_dim)
         self.input_dropout = nn.Dropout(dropout_p)

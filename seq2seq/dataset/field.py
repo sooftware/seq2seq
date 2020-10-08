@@ -37,6 +37,7 @@ class TargetField(torchtext.data.Field):
         if kwargs.get('batch_first') == False:
             logger.warning("Option batch_first has to be set to use pytorch-seq2seq.  Changed to True.")
         kwargs['batch_first'] = True
+
         if kwargs.get('preprocessing') is None:
             kwargs['preprocessing'] = lambda seq: [self.SYM_SOS] + seq + [self.SYM_EOS]
         else:

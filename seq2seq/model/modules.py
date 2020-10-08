@@ -39,12 +39,12 @@ class LayerNorm(nn.Module):
 
 class View(nn.Module):
     """ Wrapper class of torch.view() for Sequential modeule. """
-    def __init__(self, shape: tuple, contiguous: bool = False):
+    def __init__(self, shape: tuple, contiguous: bool = False) -> None:
         super(View, self).__init__()
         self.shape = shape
         self.contiguous = contiguous
 
-    def forward(self, inputs):
+    def forward(self, inputs: Tensor) -> Tensor:
         if self.contiguous:
             inputs = inputs.contiguous()
 

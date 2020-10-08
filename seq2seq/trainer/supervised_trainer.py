@@ -17,9 +17,15 @@ class SupervisedTrainer(object):
         batch_size (int, optional): batch size for experiment, (default: 64)
         checkpoint_every (int, optional): number of batches to checkpoint after, (default: 100)
     """
-    def __init__(self, expt_dir='experiment', criterion=NLLLoss(), batch_size=64,
-                 random_seed=None,
-                 checkpoint_every=100, print_every=100):
+    def __init__(
+            self,
+            expt_dir='experiment',
+            criterion=NLLLoss(),
+            batch_size=64,
+            random_seed=None,
+            checkpoint_every=100,
+            print_every=100
+    ):
         self._trainer = "Simple Trainer"
         self.random_seed = random_seed
         if random_seed is not None:

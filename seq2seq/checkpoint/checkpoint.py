@@ -12,6 +12,7 @@ class Checkpoint(object):
     (e.g. when running on a cluster using sequential jobs).
     To make a checkpoint, initialize a Checkpoint object with the following args; then call that object's save() method
     to write parameters to disk.
+
     Args:
         model (transformer.model): transformer model being trained
         optimizer (Optimizer): stores the state of the optimizer
@@ -19,6 +20,7 @@ class Checkpoint(object):
         step (int): number of examples seen within the current epoch
         input_vocab (Vocabulary): vocabulary for the input language
         output_vocab (Vocabulary): vocabulary for the output language
+
     Attributes:
         CHECKPOINT_DIR_NAME (str): name of the checkpoint directory
         TRAINER_STATE_NAME (str): name of the file storing trainer states
@@ -65,11 +67,12 @@ class Checkpoint(object):
         if os.path.exists(path):
             shutil.rmtree(path)
         os.makedirs(path)
-        torch.save({'epoch': self.epoch,
-                    'step': self.step,
-                    'optimizer': self.optimizer
-                    },
-                   os.path.join(path, self.TRAINER_STATE_NAME))
+        torch.save(
+            {'epoch': self.epoch,
+             'step': self.step,
+             'optimizer': self.optimizer},
+            os.path.join(path, self.TRAINER_STATE_NAME)
+        )
         torch.save(self.model, os.path.join(path, self.MODEL_NAME))
 
         with open(os.path.join(path, self.INPUT_VOCAB_FILE), 'wb') as fout:
@@ -102,12 +105,15 @@ class Checkpoint(object):
         with open(os.path.join(path, cls.OUTPUT_VOCAB_FILE), 'rb') as fin:
             output_vocab = dill.load(fin)
         optimizer = resume_checkpoint['optimizer']
-        return Checkpoint(model=model, input_vocab=input_vocab,
-                          output_vocab=output_vocab,
-                          optimizer=optimizer,
-                          epoch=resume_checkpoint['epoch'],
-                          step=resume_checkpoint['step'],
-                          path=path)
+        return Checkpoint(
+            model=model,
+            input_vocab=input_vocab,
+            output_vocab=output_vocab,
+            optimizer=optimizer,
+            epoch=resume_checkpoint['epoch'],
+            step=resume_checkpoint['step'],
+            path=path
+        )
 
     @classmethod
     def get_latest_checkpoint(cls, experiment_path):
